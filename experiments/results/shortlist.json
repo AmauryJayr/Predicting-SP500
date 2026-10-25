@@ -1,0 +1,761 @@
+{
+ "5": [
+  {
+   "family": "platt",
+   "label": "LogReg{'C': 0.003} core R=21 N=504",
+   "method": {
+    "kind": "platt",
+    "base": {
+     "kind": "wf",
+     "model": "LogReg",
+     "params": {
+      "C": 0.003
+     },
+     "feats": "core",
+     "norm": null,
+     "refit": 21
+    },
+    "N": 504,
+    "mode": "recent"
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "platt",
+    "base": {
+     "kind": "wf",
+     "model": "LogReg",
+     "params": {
+      "C": 0.003
+     },
+     "feats": "core",
+     "norm": null,
+     "refit": 21
+    },
+    "N": 504,
+    "mode": "static"
+   },
+   "val": {
+    "dBA": 0.0813220844417443,
+    "dAUC": 0.0766979386305633,
+    "dBrier": 0.0042925611436639,
+    "BA": 0.536689820236003,
+    "AUC": 0.5117071086240467,
+    "Brier": 0.2384710553543486,
+    "score": 0.1580200230723076
+   }
+  },
+  {
+   "family": "norm+decay",
+   "label": "LogReg{'C': 0.003} core rank252 hl=252",
+   "method": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": "rank252",
+    "refit": 21,
+    "half_life": 252
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": "rank252",
+    "refit": null
+   },
+   "val": {
+    "dBA": 0.0609146527123053,
+    "dAUC": 0.0655241167412556,
+    "dBrier": -0.0020535937230787,
+    "BA": 0.516282388506564,
+    "AUC": 0.500533286734739,
+    "Brier": 0.2448172102210912,
+    "score": 0.1264387694535609
+   }
+  },
+  {
+   "family": "detect",
+   "label": "LogReg{'C': 0.003} core adwin(d=0.002,lam=None) W=504",
+   "method": {
+    "kind": "detect",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "detector": "adwin",
+    "delta": 0.002,
+    "lam": null,
+    "stream": "error",
+    "window": 504
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": 63,
+    "window": 504
+   },
+   "val": {
+    "dBA": 0.0409570078641882,
+    "dAUC": 0.0757410644000562,
+    "dBrier": -0.0121490320817133,
+    "BA": 0.496324743658447,
+    "AUC": 0.5107502343935396,
+    "Brier": 0.2549126485797259,
+    "score": 0.1166980722642445
+   }
+  },
+  {
+   "family": "decay",
+   "label": "LogReg{'C': 0.03} core hl=126",
+   "method": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.03
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": 21,
+    "half_life": 126
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.03
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.03
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": 21
+   },
+   "val": {
+    "dBA": 0.0439092298735281,
+    "dAUC": 0.0527519241896559,
+    "dBrier": -0.0178655924296512,
+    "BA": 0.5023770103381707,
+    "AUC": 0.4922869185829859,
+    "Brier": 0.2652974476752732,
+    "score": 0.096661154063184
+   }
+  },
+  {
+   "family": "regime",
+   "label": "GBDT all vix_level",
+   "method": {
+    "kind": "regime",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "all",
+    "norm": null,
+    "regime_var": "vix_level"
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "all",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": null,
+   "val": {
+    "dBA": 0.0280641874088347,
+    "dAUC": 0.0464988917612939,
+    "dBrier": -0.0027386680131027,
+    "BA": 0.4906302421211466,
+    "AUC": 0.5076279940286765,
+    "Brier": 0.2619490355833303,
+    "score": 0.0745630791701287
+   }
+  },
+  {
+   "family": "hedge",
+   "label": "diverse eta=100 lhl=63",
+   "method": {
+    "kind": "hedge",
+    "experts": [
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21,
+      "window": 252
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": "rank252",
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 63,
+      "half_life": 252
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 63
+     }
+    ],
+    "eta": 100,
+    "loss_hl": 63
+   },
+   "primary": {
+    "kind": "hedge",
+    "experts": [
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21,
+      "window": 252
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": "rank252",
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 63,
+      "half_life": 252
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 63
+     }
+    ],
+    "adaptive": false,
+    "fixed_experts": true
+   },
+   "secondary": {
+    "kind": "hedge",
+    "experts": [
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 21,
+      "window": 252
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "core",
+      "norm": "rank252",
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "LogReg",
+      "params": {
+       "C": 0.003
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 21
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "core",
+      "norm": null,
+      "refit": 63,
+      "half_life": 252
+     },
+     {
+      "kind": "wf",
+      "model": "GBDT",
+      "params": {
+       "learning_rate": 0.05,
+       "max_depth": 2,
+       "max_iter": 150,
+       "min_samples_leaf": 200,
+       "l2_regularization": 1.0
+      },
+      "feats": "all",
+      "norm": null,
+      "refit": 63
+     }
+    ],
+    "adaptive": false
+   },
+   "val": {
+    "dBA": 0.0352035243289789,
+    "dAUC": 0.0137109870331513,
+    "dBrier": 0.0014825736642955,
+    "BA": 0.505614544162151,
+    "AUC": 0.4727120597586208,
+    "Brier": 0.2442492405935315,
+    "score": 0.0489145113621302
+   }
+  }
+ ],
+ "1": [
+  {
+   "family": "norm+decay",
+   "label": "GBDT core rank252 hl=252",
+   "method": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": "rank252",
+    "refit": 63,
+    "half_life": 252
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": "rank252",
+    "refit": null
+   },
+   "val": {
+    "dBA": 0.0304311551225393,
+    "dAUC": 0.0286742105375945,
+    "dBrier": -0.0031312841276106,
+    "BA": 0.511125748610687,
+    "AUC": 0.5040192376373498,
+    "Brier": 0.2583790617149986,
+    "score": 0.0591053656601339
+   }
+  },
+  {
+   "family": "decay",
+   "label": "GBDT core hl=252",
+   "method": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": 63,
+    "half_life": 252
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "GBDT",
+    "params": {
+     "learning_rate": 0.05,
+     "max_depth": 2,
+     "max_iter": 150,
+     "min_samples_leaf": 200,
+     "l2_regularization": 1.0
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": 63
+   },
+   "val": {
+    "dBA": 0.0276233648153778,
+    "dAUC": 0.0283373126513749,
+    "dBrier": -0.0024287904498077,
+    "BA": 0.5083179583035254,
+    "AUC": 0.5036823397511302,
+    "Brier": 0.2576765680371958,
+    "score": 0.0559606774667527
+   }
+  },
+  {
+   "family": "norm",
+   "label": "LogReg{'C': 0.003} core rank252",
+   "method": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": "rank252",
+    "refit": null
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": null,
+   "val": {
+    "dBA": 0.0301053830053352,
+    "dAUC": 0.0196928299789617,
+    "dBrier": -0.0004889775516017,
+    "BA": 0.5138197936834358,
+    "AUC": 0.5002345902175562,
+    "Brier": 0.2495344709379701,
+    "score": 0.0497982129842969
+   }
+  },
+  {
+   "family": "regime",
+   "label": "LogReg{'C': 0.003} all vix_pct_rank_252d",
+   "method": {
+    "kind": "regime",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "all",
+    "norm": null,
+    "regime_var": "vix_pct_rank_252d"
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "all",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": null,
+   "val": {
+    "dBA": 0.0224996144936117,
+    "dAUC": 0.0233217144506327,
+    "dBrier": -0.0009831660015656,
+    "BA": 0.5131512742835125,
+    "AUC": 0.5066129778623369,
+    "Brier": 0.2511137999527797,
+    "score": 0.0458213289442445
+   }
+  },
+  {
+   "family": "detect",
+   "label": "LogReg{'C': 0.003} all adwin(d=0.05,lam=None) W=504",
+   "method": {
+    "kind": "detect",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "all",
+    "norm": null,
+    "detector": "adwin",
+    "delta": 0.05,
+    "lam": null,
+    "stream": "error",
+    "window": 504
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "all",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "all",
+    "norm": null,
+    "refit": 63,
+    "window": 504
+   },
+   "val": {
+    "dBA": 0.0115066727518389,
+    "dAUC": 0.0268241085838964,
+    "dBrier": -0.0075692515048119,
+    "BA": 0.5021583325417397,
+    "AUC": 0.5101153719956005,
+    "Brier": 0.257699885456026,
+    "score": 0.0383307813357354
+   }
+  },
+  {
+   "family": "platt",
+   "label": "LogReg{'C': 0.003} core R=21 N=252",
+   "method": {
+    "kind": "platt",
+    "base": {
+     "kind": "wf",
+     "model": "LogReg",
+     "params": {
+      "C": 0.003
+     },
+     "feats": "core",
+     "norm": null,
+     "refit": 21
+    },
+    "N": 252,
+    "mode": "recent"
+   },
+   "primary": {
+    "kind": "wf",
+    "model": "LogReg",
+    "params": {
+     "C": 0.003
+    },
+    "feats": "core",
+    "norm": null,
+    "refit": null
+   },
+   "secondary": {
+    "kind": "platt",
+    "base": {
+     "kind": "wf",
+     "model": "LogReg",
+     "params": {
+      "C": 0.003
+     },
+     "feats": "core",
+     "norm": null,
+     "refit": 21
+    },
+    "N": 252,
+    "mode": "static"
+   },
+   "val": {
+    "dBA": 0.0289257059462046,
+    "dAUC": 0.0025870271154762,
+    "dBrier": 0.0003021838522002,
+    "BA": 0.5126401166243052,
+    "AUC": 0.4831287873540706,
+    "Brier": 0.2487433095341681,
+    "score": 0.0315127330616808
+   }
+  }
+ ]
+}

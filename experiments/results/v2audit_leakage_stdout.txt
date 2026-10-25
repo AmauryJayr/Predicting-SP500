@@ -1,0 +1,57 @@
+[Parallel(n_jobs=15)]: Using backend LokyBackend with 15 concurrent workers.
+[Parallel(n_jobs=15)]: Done  11 tasks      | elapsed:    8.9s
+[Parallel(n_jobs=15)]: Done  41 out of  46 | elapsed:   33.1s remaining:    3.9s
+[Parallel(n_jobs=15)]: Done  46 out of  46 | elapsed:  1.3min finished
+                 max_y_err  all_le_ok  max_feat_err
+target                                             
+spy_tlt_corr  1.432188e-14       True  1.409983e-14
+spy_vol       3.996803e-15       True  4.440892e-16
+tlt_vol       1.243450e-14       True  4.440892e-16
+      target period     cutoff                                       label  n_before  max_diff_before  mean_diff_after
+     spy_vol    VAL 2017-09-29                 hgb/full/ens(eta=2.0,hl=63)       188              0.0         1.787013
+     tlt_vol    VAL 2017-09-29                 hgb/full/ens(eta=2.0,hl=63)       188              0.0         1.837099
+spy_tlt_corr    VAL 2017-09-29                 hgb/full/ens(eta=2.0,hl=63)       188              0.0         0.609202
+spy_tlt_corr   TEST 2022-06-30                   lin/hc/ens(eta=2.0,hl=63)       881              0.0         0.488489
+     spy_vol    VAL 2017-09-29                 hgb/full/refit(R=21,W=None)       188              0.0         1.770581
+     spy_vol    VAL 2017-09-29                 hgb/full/refit(R=63,W=None)       188              0.0         1.680662
+     spy_vol    VAL 2017-09-29                hgb/full/refit(R=252,W=None)       188              0.0         1.449301
+     spy_vol    VAL 2017-09-29                  hgb/full/refit(R=21,W=252)       188              0.0         1.817043
+     spy_vol    VAL 2017-09-29                 hgb/full/refit(R=21,W=1008)       188              0.0         1.732130
+     spy_vol    VAL 2017-09-29          hgb/full/refit(R=21,W=None,hl=126)       188              0.0         2.258276
+     spy_vol    VAL 2017-09-29                       hgb/full/recal(N=252)       188              0.0         1.586901
+     spy_vol    VAL 2017-09-29                       hgb/full/recal(N=504)       188              0.0         1.367925
+     spy_vol    VAL 2017-09-29        hgb/full/detect(detector=ph,lam=1.0)       188              0.0         1.799783
+     tlt_vol    VAL 2017-09-29                 hgb/full/refit(R=21,W=None)       188              0.0         1.826426
+     tlt_vol    VAL 2017-09-29                 hgb/full/refit(R=63,W=None)       188              0.0         1.734064
+     tlt_vol    VAL 2017-09-29                hgb/full/refit(R=252,W=None)       188              0.0         1.487766
+     tlt_vol    VAL 2017-09-29                  hgb/full/refit(R=21,W=252)       188              0.0         1.831250
+     tlt_vol    VAL 2017-09-29                 hgb/full/refit(R=21,W=1008)       188              0.0         1.805074
+     tlt_vol    VAL 2017-09-29          hgb/full/refit(R=21,W=None,hl=126)       188              0.0         2.198003
+     tlt_vol    VAL 2017-09-29                       hgb/full/recal(N=252)       188              0.0         1.600113
+     tlt_vol    VAL 2017-09-29                       hgb/full/recal(N=504)       188              0.0         1.302068
+     tlt_vol    VAL 2017-09-29        hgb/full/detect(detector=ph,lam=1.0)       188              0.0         1.773312
+spy_tlt_corr    VAL 2017-09-29                 hgb/full/refit(R=21,W=None)       188              0.0         0.643621
+spy_tlt_corr    VAL 2017-09-29                 hgb/full/refit(R=63,W=None)       188              0.0         0.576960
+spy_tlt_corr    VAL 2017-09-29                hgb/full/refit(R=252,W=None)       188              0.0         0.533652
+spy_tlt_corr    VAL 2017-09-29                  hgb/full/refit(R=21,W=252)       188              0.0         0.666613
+spy_tlt_corr    VAL 2017-09-29                 hgb/full/refit(R=21,W=1008)       188              0.0         0.659950
+spy_tlt_corr    VAL 2017-09-29          hgb/full/refit(R=21,W=None,hl=126)       188              0.0         0.799102
+spy_tlt_corr    VAL 2017-09-29                       hgb/full/recal(N=252)       188              0.0         0.149866
+spy_tlt_corr    VAL 2017-09-29                       hgb/full/recal(N=504)       188              0.0         0.120604
+spy_tlt_corr    VAL 2017-09-29        hgb/full/detect(detector=ph,lam=1.0)       188              0.0         0.697327
+spy_tlt_corr   TEST 2022-06-30                       hgb/full/recal(N=504)       881              0.0         0.280660
+spy_tlt_corr   TEST 2022-06-30                        hgb/full/bias(N=252)       881              0.0         0.401784
+spy_tlt_corr   TEST 2022-06-30                 hgb/full/refit(R=21,W=None)       881              0.0         0.729056
+spy_tlt_corr   TEST 2022-06-30 hgb/full/detect(delta=0.002,detector=adwin)       881              0.0         0.739057
+spy_tlt_corr   TEST 2022-06-30                   lin/hc/refit(R=21,W=None)       881              0.0         0.532901
+spy_tlt_corr   TEST 2022-06-30                   lin/hc/refit(R=21,W=1008)       881              0.0         0.494954
+spy_tlt_corr   TEST 2022-06-30                                lin/hc/fixed       881              0.0         0.764658
+spy_tlt_corr   TEST 2022-06-30                          lin/hc/bias(N=252)       881              0.0         0.737839
+spy_tlt_corr   TEST 2022-06-30                         lin/hc/recal(N=504)       881              0.0         0.364280
+spy_tlt_corr   TEST 2022-06-30                       lin/hc/rls(lam=0.995)       881              0.0         0.570350
+spy_tlt_corr   TEST 2022-06-30   lin/hc/detect(delta=0.002,detector=adwin)       881              0.0         0.436806
+spy_tlt_corr   TEST 2022-06-30                    lin/hc/refit(R=5,W=None)       881              0.0         0.529768
+spy_tlt_corr   TEST 2022-06-30                   lin/hc/refit(R=63,W=None)       881              0.0         0.548308
+spy_tlt_corr   TEST 2022-06-30                              hgb/full/fixed       881              0.0         0.195874
+spy_tlt_corr   TEST 2022-06-30                                     raw:c63       881              0.0         4.154940
+runs: 46 all identical before cutoff: True all differ after: True

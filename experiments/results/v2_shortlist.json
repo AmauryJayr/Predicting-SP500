@@ -1,0 +1,463 @@
+{
+ "spy_tlt_corr": {
+  "baselines": {
+   "hc_fixed": {
+    "feats": "hc",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "longrun_mean": {
+    "method": "const"
+   },
+   "persist_21": {
+    "col": "c21",
+    "method": "raw"
+   },
+   "persist_63": {
+    "col": "c63",
+    "method": "raw"
+   }
+  },
+  "best_adaptive_id": "spy_tlt_corr.1",
+  "best_baseline": "hc_fixed",
+  "entries": [
+   {
+    "counterpart": {
+     "feats": "full",
+     "method": "fixed",
+     "model": "hgb"
+    },
+    "eligible": true,
+    "id": "spy_tlt_corr.1",
+    "label": "hgb/full/recal(N=504)",
+    "slot": "rule",
+    "spec": {
+     "N": 504,
+     "feats": "full",
+     "method": "recal",
+     "model": "hgb"
+    },
+    "val_rel_vs_fixed_VAL": 0.2417,
+    "val_rel_vs_fixed_mean": 0.1079,
+    "val_skill_vs_bb_mean": -0.2155
+   },
+   {
+    "counterpart": {
+     "feats": "full",
+     "method": "fixed",
+     "model": "hgb"
+    },
+    "eligible": true,
+    "id": "spy_tlt_corr.2",
+    "label": "hgb/full/bias(N=252)",
+    "slot": "rule",
+    "spec": {
+     "N": 252,
+     "feats": "full",
+     "method": "bias",
+     "model": "hgb"
+    },
+    "val_rel_vs_fixed_VAL": 0.1968,
+    "val_rel_vs_fixed_mean": 0.0899,
+    "val_skill_vs_bb_mean": -0.2427
+   },
+   {
+    "counterpart": {
+     "feats": "full",
+     "method": "fixed",
+     "model": "hgb"
+    },
+    "eligible": true,
+    "id": "spy_tlt_corr.3",
+    "label": "hgb/full/refit(R=21,W=None)",
+    "slot": "rule",
+    "spec": {
+     "R": 21,
+     "W": null,
+     "feats": "full",
+     "method": "refit",
+     "model": "hgb"
+    },
+    "val_rel_vs_fixed_VAL": 0.13,
+    "val_rel_vs_fixed_mean": 0.0551,
+    "val_skill_vs_bb_mean": -0.3002
+   },
+   {
+    "counterpart": {
+     "feats": "full",
+     "method": "fixed",
+     "model": "hgb"
+    },
+    "eligible": true,
+    "id": "spy_tlt_corr.4",
+    "label": "hgb/full/detect(delta=0.002,detector=adwin)",
+    "slot": "rule",
+    "spec": {
+     "delta": 0.002,
+     "detector": "adwin",
+     "feats": "full",
+     "method": "detect",
+     "model": "hgb"
+    },
+    "val_rel_vs_fixed_VAL": 0.0587,
+    "val_rel_vs_fixed_mean": 0.0204,
+    "val_skill_vs_bb_mean": -0.3412
+   },
+   {
+    "counterpart": {
+     "feats": "hc",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": false,
+    "id": "spy_tlt_corr.5",
+    "label": "lin/hc/refit(R=21,W=None)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": null,
+     "feats": "hc",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": -0.0167,
+    "val_rel_vs_fixed_mean": -0.0122,
+    "val_skill_vs_bb_mean": -0.0122
+   },
+   {
+    "counterpart": {
+     "feats": "hc",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": false,
+    "id": "spy_tlt_corr.6",
+    "label": "lin/hc/refit(R=21,W=1008)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": 1008,
+     "feats": "hc",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": -0.0228,
+    "val_rel_vs_fixed_mean": -0.0245,
+    "val_skill_vs_bb_mean": -0.0245
+   }
+  ],
+  "h": 21
+ },
+ "spy_vol": {
+  "baselines": {
+   "har_fixed": {
+    "feats": "har",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "harx_fixed": {
+    "feats": "harx",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "persist_20": {
+    "col": "lrv20",
+    "method": "raw"
+   },
+   "persist_5": {
+    "col": "lrv5",
+    "method": "raw"
+   },
+   "vix_lin_fixed": {
+    "feats": "vix",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "vix_raw": {
+    "col": "lvix",
+    "method": "raw"
+   }
+  },
+  "best_adaptive_id": "spy_vol.1",
+  "best_baseline": "harx_fixed",
+  "entries": [
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "spy_vol.1",
+    "label": "lin/harx/rls(lam=0.998)",
+    "slot": "rule",
+    "spec": {
+     "feats": "harx",
+     "lam": 0.998,
+     "method": "rls",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0287,
+    "val_rel_vs_fixed_mean": 0.0324,
+    "val_skill_vs_bb_mean": 0.0324
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "spy_vol.2",
+    "label": "lin/harx/refit(R=21,W=None,hl=252)",
+    "slot": "rule",
+    "spec": {
+     "R": 21,
+     "W": null,
+     "feats": "harx",
+     "hl": 252,
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0267,
+    "val_rel_vs_fixed_mean": 0.0274,
+    "val_skill_vs_bb_mean": 0.0274
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "spy_vol.3",
+    "label": "lin/harx/ens(eta=2.0,hl=63)",
+    "slot": "rule",
+    "spec": {
+     "eta": 2.0,
+     "feats": "harx",
+     "hl": 63,
+     "method": "ens",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0191,
+    "val_rel_vs_fixed_mean": 0.0266,
+    "val_skill_vs_bb_mean": 0.0266
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "spy_vol.4",
+    "label": "lin/harx/refit(R=21,W=504)",
+    "slot": "rule",
+    "spec": {
+     "R": 21,
+     "W": 504,
+     "feats": "harx",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0031,
+    "val_rel_vs_fixed_mean": 0.0213,
+    "val_skill_vs_bb_mean": 0.0213
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": false,
+    "id": "spy_vol.5",
+    "label": "lin/harx/refit(R=21,W=None)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": null,
+     "feats": "harx",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": -0.0029,
+    "val_rel_vs_fixed_mean": 0.0116,
+    "val_skill_vs_bb_mean": 0.0116
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "spy_vol.6",
+    "label": "lin/harx/refit(R=21,W=1008)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": 1008,
+     "feats": "harx",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0332,
+    "val_rel_vs_fixed_mean": 0.0147,
+    "val_skill_vs_bb_mean": 0.0147
+   }
+  ],
+  "h": 5
+ },
+ "tlt_vol": {
+  "baselines": {
+   "har_fixed": {
+    "feats": "har",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "harx_fixed": {
+    "feats": "harx",
+    "method": "fixed",
+    "model": "lin"
+   },
+   "persist_20": {
+    "col": "lrv20",
+    "method": "raw"
+   },
+   "persist_5": {
+    "col": "lrv5",
+    "method": "raw"
+   }
+  },
+  "best_adaptive_id": "tlt_vol.1",
+  "best_baseline": "harx_fixed",
+  "entries": [
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.1",
+    "label": "lin/harx/bias(N=126)",
+    "slot": "rule",
+    "spec": {
+     "N": 126,
+     "feats": "harx",
+     "method": "bias",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0935,
+    "val_rel_vs_fixed_mean": 0.027,
+    "val_skill_vs_bb_mean": 0.027
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.2",
+    "label": "lin/harx/recal(N=252)",
+    "slot": "rule",
+    "spec": {
+     "N": 252,
+     "feats": "harx",
+     "method": "recal",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.1424,
+    "val_rel_vs_fixed_mean": 0.0234,
+    "val_skill_vs_bb_mean": 0.0234
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.3",
+    "label": "lin/harx/ens(eta=2.0,hl=63)",
+    "slot": "rule",
+    "spec": {
+     "eta": 2.0,
+     "feats": "harx",
+     "hl": 63,
+     "method": "ens",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0967,
+    "val_rel_vs_fixed_mean": 0.0196,
+    "val_skill_vs_bb_mean": 0.0196
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.4",
+    "label": "lin/harx/rls(lam=0.999)",
+    "slot": "rule",
+    "spec": {
+     "feats": "harx",
+     "lam": 0.999,
+     "method": "rls",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0513,
+    "val_rel_vs_fixed_mean": 0.0161,
+    "val_skill_vs_bb_mean": 0.0161
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.5",
+    "label": "lin/harx/refit(R=21,W=None)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": null,
+     "feats": "harx",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0312,
+    "val_rel_vs_fixed_mean": 0.0118,
+    "val_skill_vs_bb_mean": 0.0118
+   },
+   {
+    "counterpart": {
+     "feats": "harx",
+     "method": "fixed",
+     "model": "lin"
+    },
+    "eligible": true,
+    "id": "tlt_vol.6",
+    "label": "lin/harx/refit(R=21,W=1008)",
+    "slot": "default",
+    "spec": {
+     "R": 21,
+     "W": 1008,
+     "feats": "harx",
+     "method": "refit",
+     "model": "lin"
+    },
+    "val_rel_vs_fixed_VAL": 0.0581,
+    "val_rel_vs_fixed_mean": 0.0078,
+    "val_skill_vs_bb_mean": 0.0078
+   }
+  ],
+  "h": 5
+ }
+}
