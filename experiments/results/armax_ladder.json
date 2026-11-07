@@ -1,0 +1,116 @@
+{
+  "5": {
+    "L1": {
+      "target": "cc",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": false,
+      "scheme": "fixed"
+    },
+    "L2": {
+      "target": "cc",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L3": {
+      "target": "split",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L4": {
+      "target": "split",
+      "exog": "X1",
+      "garch": true,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L5": {
+      "target": "split",
+      "garch": true,
+      "calibrate": true,
+      "exog": "X0",
+      "scheme": "fixed"
+    },
+    "L6": {
+      "target": "split",
+      "garch": true,
+      "calibrate": true,
+      "exog": "X0",
+      "scheme": "expanding"
+    },
+    "_validation": {
+      "exog_mean_auc": {
+        "X0": 0.516,
+        "X1": 0.5051,
+        "X2": 0.4064
+      },
+      "scheme_mean_brier": {
+        "expanding": 0.24012,
+        "fixed": 0.24064,
+        "rolling1008": 0.24067,
+        "rolling504": 0.24281
+      }
+    }
+  },
+  "1": {
+    "L1": {
+      "target": "cc",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": false,
+      "scheme": "fixed"
+    },
+    "L2": {
+      "target": "cc",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L3": {
+      "target": "split",
+      "exog": "X1",
+      "garch": false,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L4": {
+      "target": "split",
+      "exog": "X1",
+      "garch": true,
+      "calibrate": true,
+      "scheme": "fixed"
+    },
+    "L5": {
+      "target": "split",
+      "garch": true,
+      "calibrate": true,
+      "exog": "X0",
+      "scheme": "fixed"
+    },
+    "L6": {
+      "target": "split",
+      "garch": true,
+      "calibrate": true,
+      "exog": "X0",
+      "scheme": "rolling1008"
+    },
+    "_validation": {
+      "exog_mean_auc": {
+        "X0": 0.5003,
+        "X1": 0.4738,
+        "X2": 0.4791
+      },
+      "scheme_mean_brier": {
+        "expanding": 0.2486,
+        "fixed": 0.24881,
+        "rolling1008": 0.24844,
+        "rolling504": 0.24923
+      }
+    }
+  }
+}
