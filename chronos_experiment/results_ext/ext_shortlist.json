@@ -1,0 +1,31 @@
+{
+  "confirmatory": "per target: chronos vs har_fixed, vs har_refit21, vs persistence; MSE primary; Holm over the 3 comparisons per target and metric",
+  "model": "amazon/chronos-2",
+  "selected": {
+    "spy_tlt_corr": {
+      "L": 2048,
+      "eligible": false,
+      "persistence": "persist_63",
+      "val_mean_skill_vs_har_fixed": -0.0306,
+      "val_skill_VAL": -0.0494,
+      "variant": "uni"
+    },
+    "spy_vol": {
+      "L": 2048,
+      "eligible": false,
+      "persistence": "persist_20",
+      "val_mean_skill_vs_har_fixed": -0.0569,
+      "val_skill_VAL": -0.0386,
+      "variant": "cov"
+    },
+    "tlt_vol": {
+      "L": 2048,
+      "eligible": false,
+      "persistence": "persist_20",
+      "val_mean_skill_vs_har_fixed": -0.027,
+      "val_skill_VAL": 0.0994,
+      "variant": "uni"
+    }
+  },
+  "win": "Holm p_mse < 0.05 vs har_fixed AND MSE reduction >= 5% (the v2 'large, real' bar)"
+}

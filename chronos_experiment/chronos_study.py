@@ -362,23 +362,126 @@ def cmd_test(args):
           .round(4).to_string())
 
 
+EXPLORE_CSV = OUT / "chronos_explore_test.csv"
+SERIES_COLOR = {"uni": "#2a78d6", "joint": "#eb6834", "core": "#1baf7a"}  # fixed per variant
+SERIES_MARKER = {"uni": "o", "joint": "s", "core": "^"}
+SERIES_LABEL = {"uni": "SPY only", "joint": "multi-ETF + VIX", "core": "SPY + 23 core features"}
+
+
 def cmd_explore(args):
-    """EXPLORATORY: every variant x context on TEST, vs chance. Run only after `test`."""
+    """EXPLORATORY: chosen variants x contexts on TEST, vs chance, plus the context-length figure.
+    Run only after `test`. Results accumulate in chronos_explore_test.csv across runs."""
     assert (OUT / "chronos_test_comparisons.csv").exists(), "run the confirmatory `test` first"
-    pipe = load_pipeline()
+    old = pd.read_csv(EXPLORE_CSV) if EXPLORE_CSV.exists() else pd.DataFrame(columns=["h", "variant", "L"])
+    done = set(zip(old.h, old.variant, old.L))
+    pipe = None
     rows = []
-    for h in HORIZONS:
-        cd = ChronosData(h)
-        for v in VARIANTS:
-            for L in CONTEXTS:
+    for h in args.horizons:
+        cd = None
+        for v in args.variants:
+            for L in args.contexts:
+                if (h, v, L) in done:
+                    continue
+                f = OUT / f"pred_h{h}_{v}_L{L}_TEST_s1.pkl"
+                if not f.exists() and pipe is None:
+                    pipe = load_pipeline()
+                cd = cd or ChronosData(h)
                 d = run_period(pipe, cd, v, L, "TEST")
                 ch = d.copy()
                 ch["proba"], ch["pred"] = d.thr, 1
                 rows.append({"h": h, "variant": v, "L": L, **metrics(d), **paired_bootstrap(d, ch, h)})
-    t = pd.DataFrame(rows)
-    t.to_csv(OUT / "chronos_explore_test_all_configs.csv", index=False)
+                print(f"  scored h={h} {v} L={L}: AUC {rows[-1]['roc_auc']:.3f}")
+    t = pd.concat([old, pd.DataFrame(rows)], ignore_index=True) if rows else old
+    t = t.sort_values(["h", "variant", "L"]).reset_index(drop=True)
+    t.to_csv(EXPLORE_CSV, index=False)
     print(t[["h", "variant", "L", "balanced_acc", "roc_auc", "brier", "p_balanced_acc", "p_roc_auc"]]
           .round(3).to_string())
+    plot_context_length(t[t.variant.isin(args.variants) & t.h.isin(args.horizons)])
+
+
+def plot_context_length(t: pd.DataFrame):
+    """Test AUC vs context length (95% block-bootstrap CI), with the validation mean for reference."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    ink, ink2, grid = "#0b0b0b", "#52514e", "#e4e3df"
+    val = pd.read_csv(VAL_LOG).groupby(["h", "variant", "L"]).roc_auc.mean() if VAL_LOG.exists() else None
+    spec = json.loads(SHORTLIST.read_text())["selected"] if SHORTLIST.exists() else {}
+    hs = sorted(t.h.unique())
+    variants = [v for v in VARIANTS if v in set(t.variant)]
+    xpos = {L: i for i, L in enumerate(CONTEXTS)}
+    offset = {v: (k - (len(variants) - 1) / 2) * 0.09 for k, v in enumerate(variants)}
+
+    fig, axes = plt.subplots(1, len(hs), figsize=(5.6 * len(hs), 4.4), sharey=True, squeeze=False)
+    for ax, h in zip(axes[0], hs):
+        ax.axhline(0.5, color=ink2, lw=1, ls=(0, (4, 3)), zorder=1)
+        ax.text(-0.45, 0.5, "chance", color=ink2, fontsize=8, va="center", ha="left", zorder=5,
+                bbox=dict(boxstyle="square,pad=0.15", fc="#fcfcfb", ec="none"))
+        ends = []
+        for v in variants:
+            d = t[(t.h == h) & (t.variant == v)].sort_values("L")
+            if d.empty:
+                continue
+            c = SERIES_COLOR[v]
+            x = np.array([xpos[L] for L in d.L]) + offset[v]
+            y = d.roc_auc.to_numpy()
+            lo, hi = 0.5 + d.d_roc_auc_lo.to_numpy(), 0.5 + d.d_roc_auc_hi.to_numpy()  # chance AUC = 0.5
+            ax.errorbar(x, y, yerr=[y - lo, hi - y], fmt="none", ecolor=c, elinewidth=1.2, alpha=0.55, zorder=2)
+            ax.plot(x, y, color=c, lw=2, marker=SERIES_MARKER[v], ms=8, mec="#fcfcfb", mew=2, zorder=3,
+                    label=f"{SERIES_LABEL[v]} (test)")
+            if val is not None:
+                vv = [val.get((h, v, L), np.nan) for L in d.L]
+                ax.plot(x, vv, color=c, lw=1, ls=(0, (2, 2)), marker=SERIES_MARKER[v], ms=6, mfc="none",
+                        alpha=0.8, zorder=2, label=f"{SERIES_LABEL[v]} (validation mean)")
+            ends.append([y[-1], x[-1], SERIES_LABEL[v]])
+            sel = spec.get(str(h))
+            if sel and sel["variant"] == v and sel["L"] in set(d.L):
+                i = list(d.L).index(sel["L"])
+                ax.plot(x[i], y[i], ls="none", marker="o", ms=17, mfc="none", mec=ink, mew=1.3, zorder=4,
+                        label="preregistered pick")
+        ax._end_labels = ends
+        ax.set_title(f"{h}-day horizon", fontsize=11, color=ink, loc="left")
+        ax.set_xticks(range(len(CONTEXTS)), [f"{L}\n(~{L / 252:.0f} y)" for L in CONTEXTS])
+        ax.set_xlim(-0.5, len(CONTEXTS) - 0.5)
+        ax.set_xlabel("context length (sessions)", color=ink2, fontsize=9)
+        ax.grid(axis="y", color=grid, lw=0.8)
+        ax.set_axisbelow(True)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+        for s in ("left", "bottom"):
+            ax.spines[s].set_color(grid)
+        ax.tick_params(colors=ink2, labelsize=8)
+    axes[0, 0].set_ylabel("ROC-AUC, 2019–2025 test", color=ink2, fontsize=9)
+    lo_y, hi_y = axes[0, 0].get_ylim()  # final, shared y-range
+    gap = 0.075 * (hi_y - lo_y)
+    for ax in axes[0]:
+        ends = sorted(getattr(ax, "_end_labels", []))
+        if len(ends) > 4:
+            continue
+        for k in range(1, len(ends)):  # direct labels at the line ends, nudged apart so they never overlap
+            ends[k][0] = max(ends[k][0], ends[k - 1][0] + gap)
+        for ylab, _, lab in ends:
+            ax.annotate(lab, (len(CONTEXTS) - 1 + 0.18, ylab), fontsize=8, color=ink, va="center",
+                        annotation_clip=False, zorder=5,
+                        bbox=dict(boxstyle="square,pad=0.15", fc="#fcfcfb", ec="none"))
+    seen = {}
+    for a in axes[0]:
+        for hd, lb in zip(*a.get_legend_handles_labels()):
+            seen.setdefault(lb, hd)
+    labels, handles = list(seen), list(seen.values())
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 3), frameon=False, fontsize=8,
+               bbox_to_anchor=(0.5, 0.0))
+    n_rows = int(np.ceil(len(labels) / 3))
+    fig.subplots_adjust(left=0.07, right=0.86, top=0.80, bottom=0.17 + 0.05 * n_rows, wspace=0.42)
+    fig.suptitle("Chronos-2 zero-shot: test AUC by context length (exploratory)", x=0.01, y=0.985, ha="left",
+                 fontsize=12, color=ink)
+    fig.text(0.01, 0.915, "Error bars: 95% paired block-bootstrap CI vs chance. Dashed hollow markers: "
+             "mean AUC over the 2013–18 validation folds.", fontsize=8, color=ink2)
+    out = OUT / "chronos_context_length.png"
+    fig.savefig(out, dpi=200, bbox_inches="tight", facecolor="#fcfcfb")
+    plt.close(fig)
+    print(f"figure saved: {out}")
 
 
 def main():
@@ -395,7 +498,10 @@ def main():
     sub.add_parser("select")
     t = sub.add_parser("test")
     t.add_argument("--force", action="store_true")
-    sub.add_parser("explore")
+    x = sub.add_parser("explore")
+    x.add_argument("--horizons", type=int, nargs="+", default=HORIZONS)
+    x.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=list(VARIANTS))
+    x.add_argument("--contexts", type=int, nargs="+", default=CONTEXTS)
     args = ap.parse_args()
     global BATCH
     BATCH = args.batch
