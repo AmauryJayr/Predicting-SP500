@@ -16,7 +16,7 @@ import pandas as pd
 
 import timesfm_lib as tl
 from timesfm_verify_detrend import get_model, set_mode, test_dates, CTX, H5
-from common import RES_DIR
+from tf_paths import RES_DIR
 
 CACHE = RES_DIR / "timesfm_cause_cache"
 CACHE.mkdir(parents=True, exist_ok=True)

@@ -18,7 +18,8 @@ from scipy.optimize import brentq
 from scipy.special import expit
 from scipy.stats import norm
 
-from common import BONDS, COMMODITIES, DATA_DIR, EQUITY, PERIODS, RES_DIR, SECTORS, SEED
+from tf_paths import RES_DIR
+from common import BONDS, COMMODITIES, DATA_DIR, EQUITY, PERIODS, SECTORS, SEED
 
 CKPT = "google/timesfm-3.0-pytorch"
 VARIANTS = ["price", "ret", "multi"]

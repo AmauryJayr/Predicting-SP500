@@ -27,7 +27,8 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score, balanced_accuracy_score
 
 import timesfm_lib as tl
-from common import DATA_DIR, RES_DIR
+from tf_paths import RES_DIR
+from common import DATA_DIR
 from timesfm_explore_years import STRETCHES, frame
 from timesfm_explore_split import split, block_ci, price_frame, cols_for, SEGS
 from timesfm_verify_detrend import labels

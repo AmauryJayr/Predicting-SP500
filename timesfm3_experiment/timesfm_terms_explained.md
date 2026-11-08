@@ -1,6 +1,6 @@
 # h、zero-shot、ROC-AUC、balanced accuracy 是什麼
 
-這四個詞在 TimesFM 報告（`experiments/TIMESFM_REPORT.md`）裡都會出現。前三個依難度排列：h 最簡單，zero-shot 次之，ROC-AUC 最難，所以篇幅最長。第 4 節補充 balanced accuracy（BA），它是報告裡另一個主要分數。
+這四個詞在 TimesFM 報告（`timesfm3_experiment/TIMESFM_REPORT.md`）裡都會出現。前三個依難度排列：h 最簡單，zero-shot 次之，ROC-AUC 最難，所以篇幅最長。第 4 節補充 balanced accuracy（BA），它是報告裡另一個主要分數。
 
 ---
 
@@ -158,7 +158,7 @@ AUC 恰好等於：**隨機挑一個漲的日子和一個跌的日子，模型�
 - 準確率 = 0.614，看起來不錯。
 - 但每天的分數都一樣，AUC = 0.5。
 
-在結果表（`experiments/results/timesfm_test_levels.csv`）裡，chance 這一列正是這樣：accuracy 0.614，AUC 0.500。AUC 不會被這種沒資訊的模型騙過。
+在結果表（`timesfm3_experiment/results/timesfm_test_levels.csv`）裡，chance 這一列正是這樣：accuracy 0.614，AUC 0.500。AUC 不會被這種沒資訊的模型騙過。
 
 **原因 2：AUC 只看排序，不看分數的大小。** 把例子裡每個分數都加 0.1（A 0.9、B 0.5、C 0.7、D 0.3），4 組的大小關係完全沒變，AUC 還是 0.75。
 
@@ -259,4 +259,4 @@ BA 和 AUC 的差別：BA 要先選一個門檻、把分數變成「漲／跌」
 | h=1（1,759 天） | 0.482 | 0.508 | 0.500 | 0.483 | 0.514 | 0.500 | 0.546 |
 | h=5（1,755 天） | 0.459 | 0.536 | 0.500 | 0.467 | 0.536 | 0.500 | 0.614 |
 
-數字來源：`experiments/results/timesfm_test_levels.csv`。
+數字來源：`timesfm3_experiment/results/timesfm_test_levels.csv`。

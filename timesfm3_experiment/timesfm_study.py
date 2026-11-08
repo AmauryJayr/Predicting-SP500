@@ -25,7 +25,9 @@ import numpy as np
 import pandas as pd
 
 import timesfm_lib as tl
-from common import PERIODS, RES_DIR, EXP_DIR, SELECTION_FOLDS, Dataset, metrics, paired_bootstrap
+from tf_paths import RES_DIR, TF_DIR
+from common import PERIODS, SELECTION_FOLDS, Dataset, metrics, paired_bootstrap
+from common import RES_DIR as PROJECT_RES_DIR   # the team's results/ (test_predictions.pkl)
 from methods import run_spec
 from run_test import chance, holm
 
@@ -49,7 +51,7 @@ LR_SPEC = {"feats": "core", "kind": "wf", "model": "LogReg", "norm": None, "para
 LR_KEY = {5: ("5", 1, "primary"), 1: ("1", 6, "primary")}        # its saved TEST frame in test_predictions.pkl
 
 SHORT = RES_DIR / "timesfm_shortlist.json"
-PREREG = EXP_DIR / "timesfm_preregistration.md"
+PREREG = TF_DIR / "timesfm_preregistration.md"
 LOG = RES_DIR / "timesfm_validation_log.csv"
 
 
@@ -326,7 +328,7 @@ def lr_frame(ds, h: int, period: str) -> pd.DataFrame:
     """The project's headline trained-once LR on the same rows: reused if saved, else recomputed."""
     s, e = ds.period_positions(period)
     if period == "TEST":
-        p = pd.read_pickle(RES_DIR / "test_predictions.pkl").get(LR_KEY[h])
+        p = pd.read_pickle(PROJECT_RES_DIR / "test_predictions.pkl").get(LR_KEY[h])
         if p is not None and p.index.equals(ds.index[s:e]) and (p["y"].to_numpy() == ds.y[s:e]).all():
             p = p.copy()
             p.attrs["source"] = f"test_predictions.pkl{LR_KEY[h]}"

@@ -16,7 +16,8 @@ from sklearn.metrics import roc_auc_score
 
 import timesfm_lib as tl
 from timesfm_verify_detrend import get_model, set_mode, _fc
-from common import DATA_DIR, RES_DIR
+from tf_paths import RES_DIR
+from common import DATA_DIR
 
 CTX = 256
 ASSETS = ["SPY", "QQQ", "GLD", "TLT", "IEF"]

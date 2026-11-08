@@ -22,7 +22,8 @@ import pandas as pd
 
 import timesfm_lib as tl
 from timesfm_verify_detrend import get_model, set_mode, _fc
-from common import RES_DIR, Dataset
+from tf_paths import RES_DIR
+from common import Dataset
 
 CTX, L = 256, 20
 CONDS = ["A", "B", "Bsum", "Grev", "Blow21", "Blow63", "O32", "O64", "O128", "N32", "S32x2", "S32x0.5"]

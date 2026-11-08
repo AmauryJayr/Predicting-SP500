@@ -17,7 +17,8 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 import timesfm_lib as tl
-from common import DATA_DIR, RES_DIR, Dataset
+from tf_paths import RES_DIR
+from common import DATA_DIR, Dataset
 from timesfm_explore_years import STRETCHES
 
 CTX, VARIANT, H5 = 256, "multi", 5

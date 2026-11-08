@@ -15,7 +15,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from common import DATA_DIR, RES_DIR
+from tf_paths import RES_DIR
+from common import DATA_DIR
 
 
 def main():

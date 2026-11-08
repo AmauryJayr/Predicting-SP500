@@ -71,11 +71,11 @@ Each rule scores a day by the asset's own past log change: the bigger the rise, 
 ## 4. Reproduce
 
 ```bash
-cd experiments
+cd timesfm3_experiment
 /home/<user>/miniconda3/envs/timesfm/bin/python timesfm_other_assets.py   # ~3 min on CPU
 ```
 
 | File | Content |
 |---|---|
-| `experiments/timesfm_other_assets.py` | forecasts, AUCs, intervals, yearly AUCs, one-line rules |
-| `results/timesfm_other_assets.csv` | one row per asset and horizon; all numbers in this note |
+| `timesfm3_experiment/timesfm_other_assets.py` | forecasts, AUCs, intervals, yearly AUCs, one-line rules |
+| `timesfm3_experiment/results/timesfm_other_assets.csv` | one row per asset and horizon; all numbers in this note |

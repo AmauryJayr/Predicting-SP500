@@ -28,7 +28,7 @@ from sklearn.metrics import roc_auc_score
 import timesfm_lib as tl
 import timesfm_verify_cause as vc
 import timesfm_verify_trigger as vt
-from common import RES_DIR
+from tf_paths import RES_DIR
 from timesfm_explore_split import SEGS, LONG, cols_for
 from timesfm_explore_years import STRETCHES, POOLS
 from timesfm_verify_detrend import test_dates, labels, CTX

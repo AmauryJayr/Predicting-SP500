@@ -135,7 +135,7 @@ flowchart LR
 
 這也看不出資料洩漏：如果 TimesFM 預訓練時看過 SPY 的歷史，2019–2023 應該會好得不合理，實際上卻很差。
 
-> 注意：這個拆期間的分析是看過考試期結果之後才做的，事先沒有登記，只能當探索性分析，不能當成「TimesFM 在某段期間有效」的證據。數字見 `experiments/results/timesfm_exploratory_subperiods.csv`。
+> 注意：這個拆期間的分析是看過考試期結果之後才做的，事先沒有登記，只能當探索性分析，不能當成「TimesFM 在某段期間有效」的證據。數字見 `timesfm3_experiment/results/timesfm_exploratory_subperiods.csv`。
 
 ## 一句話
 
@@ -143,4 +143,4 @@ flowchart LR
 
 ---
 
-數字來自專題 2019–2025 測試期（明天 1,759 天、下週 1,755 天）。模型是 `google/timesfm-3.0-pytorch`，零樣本，設定事先登記後只跑一次。詳細結果見 `experiments/results/timesfm_test_*.csv` 和 `experiments/timesfm_preregistration.md`。
+數字來自專題 2019–2025 測試期（明天 1,759 天、下週 1,755 天）。模型是 `google/timesfm-3.0-pytorch`，零樣本，設定事先登記後只跑一次。詳細結果見 `timesfm3_experiment/results/timesfm_test_*.csv` 和 `timesfm3_experiment/timesfm_preregistration.md`。

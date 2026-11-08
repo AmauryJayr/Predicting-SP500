@@ -17,7 +17,7 @@ import pandas as pd
 import timesfm_lib as tl
 from timesfm_verify_detrend import get_model, set_mode, CTX, H5, test_dates
 from timesfm_verify_cause import forecast_paths, summarise, dates_for, ewma_sigma
-from common import RES_DIR
+from tf_paths import RES_DIR
 
 CACHE = RES_DIR / "timesfm_trigger_cache"
 CACHE.mkdir(parents=True, exist_ok=True)

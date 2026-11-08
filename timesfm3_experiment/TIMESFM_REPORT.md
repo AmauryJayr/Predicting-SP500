@@ -24,7 +24,7 @@ Google's TimesFM-3 is a pretrained forecasting model. Used "as is", without any 
 - The other part says "up" on the 2 fall days and "down" on the 2 recovery days: wrong all 4 times.
 - Together, they are worse than a coin flip, and the other part is the reason.
 
-**What SPY did each year.** The SPY numbers come from `experiments/timesfm_explore_spy_years.py` (`results/timesfm_spy_years.csv`). Prices include dividends, and dates are closing days. Each year gets its own subsection in "Each year in detail" below.
+**What SPY did each year.** The SPY numbers come from `timesfm3_experiment/timesfm_explore_spy_years.py` (`timesfm3_experiment/results/timesfm_spy_years.csv`). Prices include dividends, and dates are closing days. Each year gets its own subsection in "Each year in detail" below.
 
 | year | SPY over the year | biggest fall from a high | back at that high on | days that moved more than 2% | 5-day windows that went up | TimesFM AUC, h=1 | TimesFM AUC, h=5 |
 |---|---|---|---|---|---|---|---|
@@ -409,7 +409,7 @@ Over the year it called "up" on 41% of the days (mean P(up) 0.554), while 64% of
 
 ### 1.3 Why it fails (possible reasons)
 
-Our first guess was that TimesFM simply continues the recent trend. Checking its daily scores showed nearly the opposite. All checks in this section were made **after** seeing the test results, so they are exploratory. The year and stretch tables come from `experiments/timesfm_explore_years.py`, which reads the saved test predictions and the SPY prices and writes `results/timesfm_exploratory_years.csv` (per-year numbers) and `results/timesfm_exploratory_stretches.csv` (the falls and recoveries). The checks inside the model ("What inside TimesFM causes the bet on a turn") come from the `timesfm_verify_*.py` scripts listed in section 9.
+Our first guess was that TimesFM simply continues the recent trend. Checking its daily scores showed nearly the opposite. All checks in this section were made **after** seeing the test results, so they are exploratory. The year and stretch tables come from `timesfm3_experiment/timesfm_explore_years.py`, which reads the saved test predictions and the SPY prices and writes `timesfm3_experiment/results/timesfm_exploratory_years.csv` (per-year numbers) and `timesfm3_experiment/results/timesfm_exploratory_stretches.csv` (the falls and recoveries). The checks inside the model ("What inside TimesFM causes the bet on a turn") come from the `timesfm_verify_*.py` scripts listed in section 9.
 
 Here is TimesFM's h=5 AUC by year next to what the market did:
 
@@ -446,7 +446,7 @@ Here is TimesFM's h=5 AUC by year next to what the market did:
 - **It wasn't following the trend; it was betting on a turn.** In every test year, the more SPY had risen over the past 20 days, the lower TimesFM's P(up) was. The correlation is between −0.21 and −0.68 each year (correlation runs from −1 to 1; a negative value means one goes up when the other goes down). In other words, TimesFM expects a bounce after a fall and a pullback after a rise. During the falls, this bet made it call "up" too early. But it is **not** the main reason these three years were bad; see "Is the bet on a turn what made 2020, 2022 and 2025 bad?" below.
 - **Where this comes from was checked inside the model.** It is not the built-in detrending we first guessed. See "What inside TimesFM causes the bet on a turn" below.
 
-**Calm years weren't good either.** 2021, 2023 and 2024 only reach 0.48–0.51, far from the 0.548 of 2013–2018. But one year is a small sample. Here are the 95% intervals of each year's h=5 AUC (block bootstrap, `results/timesfm_split_years.csv`):
+**Calm years weren't good either.** 2021, 2023 and 2024 only reach 0.48–0.51, far from the 0.548 of 2013–2018. But one year is a small sample. Here are the 95% intervals of each year's h=5 AUC (block bootstrap, `timesfm3_experiment/results/timesfm_split_years.csv`):
 
 | | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
 |---|---|---|---|---|---|---|---|
@@ -572,7 +572,7 @@ How hard it pulls back depends on volatility:
 
 *Is SPY really like this? No.* Over 2019–2025 the past 20-day move has a correlation of 0.00 with whether SPY rose over the next 5 days. TimesFM doesn't bet on turns everywhere either: on clean made-up trends it follows the move, and on made-up random walks it does neither. It bets on a turn when it sees real SPY histories, and SPY's next week doesn't follow that bet.
 
-**Is the bet on a turn what made 2020, 2022 and 2025 bad? Mostly not.** We split TimesFM's 5-day forecast into two parts and scored each on its own. The *turn part* is whatever can be computed from SPY's moves over the last 20 days, with the pull-back allowed to grow with volatility as in step 2. It accounts for 59% of how the forecast moves from day to day. The *rest* is everything else. This uses the SPY-only forecast with detrending as shipped (`experiments/timesfm_explore_split.py`); the official score gives the same picture.
+**Is the bet on a turn what made 2020, 2022 and 2025 bad? Mostly not.** We split TimesFM's 5-day forecast into two parts and scored each on its own. The *turn part* is whatever can be computed from SPY's moves over the last 20 days, with the pull-back allowed to grow with volatility as in step 2. It accounts for 59% of how the forecast moves from day to day. The *rest* is everything else. This uses the SPY-only forecast with detrending as shipped (`timesfm3_experiment/timesfm_explore_split.py`); the official score gives the same picture.
 
 | year | whole forecast (P(up)) | turn part | rest |
 |---|---|---|---|
@@ -608,7 +608,7 @@ Why the turn part didn't hurt over a whole year, and where the rest went wrong:
 - **Tiny example, shaped like 2025.** Take 4 days: 2 in the fall (both went down) and 2 in the recovery (both went up). The turn part says "up" on all 4: wrong twice, right twice, a coin flip. The rest says "up" on the 2 fall days and "down" on the 2 recovery days: wrong all 4 times. Add the two together and the forecast is worse than a coin flip, because of the rest.
 - **The rest isn't a simple combination of past moves.** Adding SPY's moves over the past 1–3 months and the past year (also allowed to change with volatility) explains 69% of the forecast, but what is left still scores 0.39–0.40 in 2020 and 2025.
 
-**What the rest reacts to: found for part of 2025, not for 2020 and 2022.** We changed the input again and watched the rest (`experiments/timesfm_verify_rest.py`, `results/timesfm_rest_*.csv`; SPY-only input, detrending as shipped).
+**What the rest reacts to: found for part of 2025, not for 2020 and 2022.** We changed the input again and watched the rest (`timesfm3_experiment/timesfm_verify_rest.py`, `timesfm3_experiment/results/timesfm_rest_*.csv`; SPY-only input, detrending as shipped).
 
 | what we changed in the 256 days TimesFM sees | rest AUC 2020 | 2022 | 2025 | recovery days where the rest pushes up, 2025 |
 |---|---|---|---|---|
@@ -677,7 +677,7 @@ Each row is TimesFM-3 minus the other model. A negative number means TimesFM is 
 
 ### 1.6 Is it just the last two years?
 
-A natural question is whether a bad 2024–2025 dragged the whole test down. It didn't. This split was made **after** seeing the test results and was not planned in advance, so treat it as exploratory (`results/timesfm_exploratory_subperiods.csv`).
+A natural question is whether a bad 2024–2025 dragged the whole test down. It didn't. This split was made **after** seeing the test results and was not planned in advance, so treat it as exploratory (`timesfm3_experiment/results/timesfm_exploratory_subperiods.csv`).
 
 | period | h=1 | h=5 | fixed LR, h=5 | TimesFM − LR, h=5 [95% CI] |
 |---|---|---|---|---|
@@ -750,7 +750,7 @@ flowchart LR
 
 ### 4.1 Forecasts
 
-One forecast per decision date *t* with horizon 5, using data with date ≤ *t* only. Step 1 serves h=1 and step 5 serves h=5, so one call covers both horizons. Forecasts are cached per (variant, context) in `results/timesfm_cache/{variant}_ctx{ctx}.npz`, keyed by date.
+One forecast per decision date *t* with horizon 5, using data with date ≤ *t* only. Step 1 serves h=1 and step 5 serves h=5, so one call covers both horizons. Forecasts are cached per (variant, context) in `timesfm3_experiment/results/timesfm_cache/{variant}_ctx{ctx}.npz`, keyed by date.
 
 | Variant | Target series | Covariates |
 |---|---|---|
@@ -784,7 +784,7 @@ proba = expit( logit(clip(s, 0.01, 0.99)) + b )
 
 ## 5. Selection (2013–2018 only)
 
-**Grid trimming.** CPU timing (`results/timesfm_timing.csv`; 8 threads were faster than 16 because of hyperthread contention):
+**Grid trimming.** CPU timing (`timesfm3_experiment/results/timesfm_timing.csv`; 8 threads were faster than 16 because of hyperthread contention):
 
 | s / forecast | ctx 256 | 512 | 1024 | 2048 |
 |---|---|---|---|---|
@@ -818,13 +818,13 @@ The full 3×4 grid over 1,510 dates would have taken 3.25 CPU-hours, above the 3
 - At h=1 the selected config's mean validation AUC (0.493) is itself below 0.5, so no skill was expected there.
 - `ret` was the worst variant at both horizons.
 
-Shortlist `results/timesfm_shortlist.json`, SHA-256 `46f92f56973e796c4911397203098589e0f445114816f2197a40892955de240a`. It is asserted by `timesfm_study.py test`.
+Shortlist `timesfm3_experiment/results/timesfm_shortlist.json`, SHA-256 `46f92f56973e796c4911397203098589e0f445114816f2197a40892955de240a`. It is asserted by `timesfm_study.py test`.
 
 ## 6. Test protocol (pre-registered)
 
 - **Counterparts:**
   - `chance`: the `run_test.chance` rule (constant proba = thr = known base rate, pred = 1).
-  - The project's headline **fixed LR**: `LogReg{'C': 0.003}` on the 23 `CORE_FEATURES`, trained once on all labels known at 2019-01-02. The saved frames `results/test_predictions.pkl` keys `('1', 6, 'primary')` and `('5', 1, 'primary')` were verified to have exactly the `Dataset(h)` test index.
+  - The project's headline **fixed LR**: `LogReg{'C': 0.003}` on the 23 `CORE_FEATURES`, trained once on all labels known at 2019-01-02. The saved frames `experiments/results/test_predictions.pkl` keys `('1', 6, 'primary')` and `('5', 1, 'primary')` were verified to have exactly the `Dataset(h)` test index.
 - **Inference:** `common.paired_bootstrap`, a paired moving-block bootstrap with 2,000 draws, block length max(20, 3h) and seed 42, on balanced accuracy, ROC-AUC and Brier (sign flipped). Holm correction within each horizon over 4 tests: {chance, fixed LR} × {BA, AUC}. The reported p is the one-sided P(Δ* ≤ 0), i.e. evidence *for* an improvement.
 - **Win rule:** Holm-adjusted p < 0.05 against **both** counterparts on BA or AUC, with a non-negative point estimate on the other metric.
 - One run; no changes after seeing the numbers.
@@ -847,12 +847,14 @@ Shortlist `results/timesfm_shortlist.json`, SHA-256 `46f92f56973e796c49113972030
 
 ## 9. Reproduce
 
+The study lives in `timesfm3_experiment/` and imports the shared project code (`experiments/common.py`, `experiments/methods.py`, `experiments/run_test.py`) via `timesfm3_experiment/tf_paths.py`. Its own outputs go to `timesfm3_experiment/results/`; the team's `experiments/results/test_predictions.pkl` is only read.
+
 ```bash
 conda create -n timesfm python=3.11 -y
 /home/<user>/miniconda3/envs/timesfm/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
 /home/<user>/miniconda3/envs/timesfm/bin/pip install "timesfm[torch]==3.0.2" pandas scikit-learn scipy joblib yfinance
 
-cd experiments
+cd timesfm3_experiment
 PY=/home/<user>/miniconda3/envs/timesfm/bin/python
 $PY timesfm_study.py validate     # timing smoke test, forecast grid on 2013-2018 (resumable, ~40 min), checks, validation log
 $PY timesfm_study.py select       # shortlist + hash-locked timesfm_preregistration.md
@@ -868,22 +870,27 @@ $PY timesfm_other_assets.py       # TIMESFM_OTHER_ASSETS.md (~3 min)
 
 | File | Content |
 |---|---|
-| `experiments/timesfm_lib.py` | context builders, cached forecasting, quantile → P(up), calibration, truncation check, 2026 data splice |
-| `experiments/timesfm_study.py` | `smoke`, `grid`, `checks`, `report`, `validate`, `select`, `test [--dry-val]` |
-| `experiments/timesfm_explore_years.py` | exploratory section 1.3: per-year AUCs, score correlations, simple-rule comparison, falls and recoveries |
-| `experiments/timesfm_explore_spy_years.py` | "In short" section at the top: what SPY did each year, next to TimesFM's yearly AUC (`results/timesfm_spy_years.csv`) |
-| `experiments/timesfm_explore_year_detail.py` | "Each year in detail": per-year AUC with intervals, phase tables, turn vs rest, detrending on/off, h=1 label checks (`results/timesfm_year_detail.csv`, `timesfm_year_phases.csv`, `figures/timesfm_year_<YYYY>.png`) |
-| `experiments/timesfm_explore_split.py` | section 1.3: yearly AUC intervals; turn part vs rest of the forecast, per year and per stretch (`results/timesfm_split_years.csv`, `timesfm_split_stretches.csv`) |
-| `experiments/timesfm_verify_rest.py` | section 1.3 "What the rest reacts to": input changes scored on the rest of the forecast, flexible-model check, synthetic drift test (`results/timesfm_rest_*.csv`) |
-| `experiments/timesfm_verify_detrend.py` | section 1.3 step 1: detrending switched off or forced on (`results/timesfm_detrend_*.csv`) |
-| `experiments/timesfm_verify_cause.py` | section 1.3 step 2: pull-back per piece of the window, volatility thirds, whole-window flips and shuffles (`results/timesfm_cause_*.csv`) |
-| `experiments/timesfm_verify_trigger.py` | section 1.3 steps 3–4: real/random swaps, statistics of the older history (`results/timesfm_trigger_*.csv`) |
-| `experiments/timesfm_verify_background.py` | section 1.3 steps 3–4: oldest-days swaps, smoothed path, rescaling test (`results/timesfm_background_extra.csv`) |
-| `experiments/timesfm_other_assets.py` | QQQ, GLD, TLT, IEF with the same setup (`results/timesfm_other_assets.csv`, `TIMESFM_OTHER_ASSETS.md`) |
-| `experiments/timesfm_preregistration.md` | pre-registration, including the calibration amendment |
-| `results/timesfm_validation_log.csv` | every config × fold |
-| `results/timesfm_test_levels.csv`, `timesfm_test_comparisons.csv`, `timesfm_test_by_year.csv` | test results (sections 1.2, 1.4, 1.5) |
-| `results/timesfm_test_predictions.pkl` | prediction frames `[y, proba, thr, pred]` for TimesFM, chance and fixed LR |
-| `results/timesfm_2026.csv` | 2026 check (section 1.7) |
-| `results/timesfm_exploratory_subperiods.csv` | section 1.6 |
-| `results/timesfm_exploratory_years.csv`, `timesfm_exploratory_stretches.csv` | section 1.3 |
+| `timesfm3_experiment/timesfm_lib.py` | context builders, cached forecasting, quantile → P(up), calibration, truncation check, 2026 data splice |
+| `timesfm3_experiment/timesfm_study.py` | `smoke`, `grid`, `checks`, `report`, `validate`, `select`, `test [--dry-val]` |
+| `timesfm3_experiment/timesfm_explore_years.py` | exploratory section 1.3: per-year AUCs, score correlations, simple-rule comparison, falls and recoveries |
+| `timesfm3_experiment/timesfm_explore_spy_years.py` | "In short" section at the top: what SPY did each year, next to TimesFM's yearly AUC (`timesfm3_experiment/results/timesfm_spy_years.csv`) |
+| `timesfm3_experiment/timesfm_explore_year_detail.py` | "Each year in detail": per-year AUC with intervals, phase tables, turn vs rest, detrending on/off, h=1 label checks (`timesfm3_experiment/results/timesfm_year_detail.csv`, `timesfm_year_phases.csv`, `figures/timesfm_year_<YYYY>.png`) |
+| `timesfm3_experiment/timesfm_explore_split.py` | section 1.3: yearly AUC intervals; turn part vs rest of the forecast, per year and per stretch (`timesfm3_experiment/results/timesfm_split_years.csv`, `timesfm_split_stretches.csv`) |
+| `timesfm3_experiment/timesfm_verify_rest.py` | section 1.3 "What the rest reacts to": input changes scored on the rest of the forecast, flexible-model check, synthetic drift test (`timesfm3_experiment/results/timesfm_rest_*.csv`) |
+| `timesfm3_experiment/timesfm_verify_detrend.py` | section 1.3 step 1: detrending switched off or forced on (`timesfm3_experiment/results/timesfm_detrend_*.csv`) |
+| `timesfm3_experiment/timesfm_verify_cause.py` | section 1.3 step 2: pull-back per piece of the window, volatility thirds, whole-window flips and shuffles (`timesfm3_experiment/results/timesfm_cause_*.csv`) |
+| `timesfm3_experiment/timesfm_verify_trigger.py` | section 1.3 steps 3–4: real/random swaps, statistics of the older history (`timesfm3_experiment/results/timesfm_trigger_*.csv`) |
+| `timesfm3_experiment/timesfm_verify_background.py` | section 1.3 steps 3–4: oldest-days swaps, smoothed path, rescaling test (`timesfm3_experiment/results/timesfm_background_extra.csv`) |
+| `timesfm3_experiment/timesfm_other_assets.py` | QQQ, GLD, TLT, IEF with the same setup (`timesfm3_experiment/results/timesfm_other_assets.csv`, `TIMESFM_OTHER_ASSETS.md`) |
+| `timesfm3_experiment/timesfm_preregistration.md` | pre-registration, including the calibration amendment |
+| `timesfm3_experiment/tf_paths.py` | paths: study folder `results/` as `RES_DIR`, and `experiments/` added to `sys.path` for the shared code |
+| `timesfm3_experiment/README.md` | short overview for teammates |
+| `timesfm3_experiment/TIMESFM_OTHER_ASSETS.md` | QQQ, GLD, TLT, IEF note (written by `timesfm_other_assets.py`) |
+| `timesfm3_experiment/timesfm_eli5.md`, `timesfm3_experiment/timesfm_terms_explained.md` | plain-language explainers (Traditional Chinese) |
+| `timesfm3_experiment/figures/timesfm_year_*.png` | per-year figures used in the report |
+| `timesfm3_experiment/results/timesfm_validation_log.csv` | every config × fold |
+| `timesfm3_experiment/results/timesfm_test_levels.csv`, `timesfm_test_comparisons.csv`, `timesfm_test_by_year.csv` | test results (sections 1.2, 1.4, 1.5) |
+| `timesfm3_experiment/results/timesfm_test_predictions.pkl` | prediction frames `[y, proba, thr, pred]` for TimesFM, chance and fixed LR |
+| `timesfm3_experiment/results/timesfm_2026.csv` | 2026 check (section 1.7) |
+| `timesfm3_experiment/results/timesfm_exploratory_subperiods.csv` | section 1.6 |
+| `timesfm3_experiment/results/timesfm_exploratory_years.csv`, `timesfm_exploratory_stretches.csv` | section 1.3 |
