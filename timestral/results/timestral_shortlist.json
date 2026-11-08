@@ -1,0 +1,30 @@
+[
+  {
+    "id": "tsl.h1",
+    "horizon": 1,
+    "variant": "ret",
+    "ctx": 1024,
+    "mean_auc": 0.4697,
+    "fold_auc": {
+      "F1": 0.4382,
+      "F2": 0.4478,
+      "VAL": 0.523
+    },
+    "val_auc_above_half": true,
+    "mean_auc_above_half": false
+  },
+  {
+    "id": "tsl.h5",
+    "horizon": 5,
+    "variant": "ret",
+    "ctx": 256,
+    "mean_auc": 0.4685,
+    "fold_auc": {
+      "F1": 0.4437,
+      "F2": 0.4217,
+      "VAL": 0.54
+    },
+    "val_auc_above_half": true,
+    "mean_auc_above_half": false
+  }
+]

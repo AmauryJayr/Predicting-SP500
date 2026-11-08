@@ -1,0 +1,5 @@
+# logs and bytecode (everything else in results/ is tracked, about 8 MB in total)
+results/*.log
+results/env_create.log
+__pycache__/
+*.pyc

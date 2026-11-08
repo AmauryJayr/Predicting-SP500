@@ -8,8 +8,9 @@ worse than the project's fixed logistic regression (0.508 / 0.536) and slightly 
 The setup was pre-registered (`timesfm_preregistration.md`, hash-locked) and the test was run once.
 
 **Start with `TIMESFM_REPORT.md`**: the "In short" section at the top has the result, then
-per-year detail, the follow-up checks (all exploratory, made after seeing the test) and a
-file table in section 9. `TIMESFM_OTHER_ASSETS.md` repeats the setup on QQQ, GLD, TLT, IEF.
+the follow-up checks (all exploratory, made after seeing the test), a file table in section 9,
+and each test year in detail as an appendix at the end.
+`TIMESFM_OTHER_ASSETS.md` repeats the setup on QQQ, GLD, TLT, IEF.
 `timesfm_eli5.md` and `timesfm_terms_explained.md` are plain-language explainers (Traditional Chinese).
 
 ## Environment

@@ -72,3 +72,24 @@ Full write-ups:
   - the news-based Economic Policy Uncertainty index.
 
   They raise AUC by about +0.01 in most comparisons, with no significant gain. Scripts: `experiments/fred_*.py`; data: `data/fred/`.
+
+## Pretrained model: TimesFM-3 (zero-shot)
+
+`timesfm3_experiment/` tests Google's pretrained TimesFM-3 forecaster on the same SPY task. It is used as is, with no training on our data. Its settings were chosen on 2013–2018 only, and the 2019–2025 test was pre-registered and run once.
+
+- **Result:** test AUC 0.482 at h = 1 and 0.459 at h = 5. That is slightly below a coin flip and below the fixed logistic regression (0.508 / 0.536). At h = 5 the gap to the logistic regression is clearly real; at h = 1 it could be luck.
+- **Follow-up checks:** year-by-year results, what inside the model causes its errors, and the same setup on QQQ, GLD, TLT and IEF. They were made after seeing the test, so they are exploratory.
+- **Setup:** a separate conda env (Python 3.11, CPU only, `timesfm` 3.0.2). Shared code is imported from `experiments/`; outputs go to `timesfm3_experiment/results/` and `timesfm3_experiment/figures/`.
+
+Write-up: `timesfm3_experiment/TIMESFM_REPORT.md`; start with its "In short" section. How to run: `timesfm3_experiment/README.md`.
+
+## Pretrained model: Timestral-209M (zero-shot)
+
+`timestral/` repeats the TimesFM-3 study with Mistral's pretrained Timestral-209M, using the same data, test rows, comparisons and win rule. It is used as is, with no training on our data. Its settings were chosen on 2013–2018 only, and the 2019–2025 test was pre-registered and run once.
+
+- **Result:** test AUC 0.480 at h = 1 and 0.496 at h = 5. That is coin-flip level and below the fixed logistic regression (0.508 / 0.536). It beats neither the logistic regression nor the chance rule at either horizon.
+- **Compared with TimesFM-3** (0.482 / 0.459): not clearly different. The one nominal gap, +0.045 balanced accuracy at h = 5, was not corrected for multiple comparisons and is not part of the win rule.
+- **Follow-up check (exploratory, after the test):** Timestral's 5-day score moves with SPY's past 20-day change, while TimesFM-3's moves against it. Why is not checked.
+- **Setup:** a conda env `timestral` (a clone of the TimesFM env plus the `timestral` package at a pinned commit), CPU only. Outputs go to `timestral/results/` and `timestral/figures/`.
+
+Write-up: `timestral/TIMESTRAL_REPORT.md`; start with its "Short answer". How to run: `timestral/README.md`.
