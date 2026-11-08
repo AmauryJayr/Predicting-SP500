@@ -1,0 +1,30 @@
+[
+  {
+    "id": "tfm.h1",
+    "horizon": 1,
+    "variant": "multi",
+    "ctx": 256,
+    "mean_auc": 0.493,
+    "fold_auc": {
+      "F1": 0.4777,
+      "F2": 0.4961,
+      "VAL": 0.5052
+    },
+    "val_auc_above_half": true,
+    "mean_auc_above_half": false
+  },
+  {
+    "id": "tfm.h5",
+    "horizon": 5,
+    "variant": "multi",
+    "ctx": 256,
+    "mean_auc": 0.5433,
+    "fold_auc": {
+      "F1": 0.5255,
+      "F2": 0.5711,
+      "VAL": 0.5334
+    },
+    "val_auc_above_half": true,
+    "mean_auc_above_half": true
+  }
+]

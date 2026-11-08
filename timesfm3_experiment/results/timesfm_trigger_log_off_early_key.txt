@@ -1,0 +1,4 @@
+/home/tong-nong/miniconda3/envs/timesfm/lib/python3.11/site-packages/numpy/lib/_format_impl.py:393: UserWarning: metadata on a dtype is not saved to an npy/npz. Use another format (such as pickle) to store it.
+  d['descr'] = dtype_to_descr(array.dtype)
+off/early/A/L20/s0: 108s
+off/early/B/L20/s0: 101s

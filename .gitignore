@@ -1,0 +1,3 @@
+__pycache__/
+timesfm3_experiment/results/timesfm_*_cache/
+timesfm3_experiment/results/*.log

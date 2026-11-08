@@ -1,0 +1,48 @@
+TimesFM-3.0 one-shot run on TEST ('2019-01-01', '2025-12-31'), shortlist 46f92f56973e..., threads=8 batch=16, dry_val=False
+multi ctx256: 128/1759 new, 0.298s/forecast
+multi ctx256: 256/1759 new, 0.315s/forecast
+multi ctx256: 384/1759 new, 0.315s/forecast
+multi ctx256: 512/1759 new, 0.334s/forecast
+multi ctx256: 640/1759 new, 0.323s/forecast
+multi ctx256: 768/1759 new, 0.324s/forecast
+multi ctx256: 896/1759 new, 0.334s/forecast
+multi ctx256: 1024/1759 new, 0.334s/forecast
+multi ctx256: 1152/1759 new, 0.329s/forecast
+multi ctx256: 1280/1759 new, 0.334s/forecast
+multi ctx256: 1408/1759 new, 0.329s/forecast
+multi ctx256: 1536/1759 new, 0.330s/forecast
+multi ctx256: 1664/1759 new, 0.341s/forecast
+multi ctx256: 1759/1759 new, 0.336s/forecast
+    id  horizon variant  ctx     role                                  source     n_cal  balanced_acc  roc_auc  brier  accuracy  pred_up_rate    n
+tfm.h1        1   multi  256  timesfm                                         1510.0000        0.4826   0.4819 0.2589    0.4815        0.4872 1759
+tfm.h1        1   multi  256   chance                                               NaN        0.5000   0.5000 0.2480    0.5463        1.0000 1759
+tfm.h1        1   multi  256 fixed_lr test_predictions.pkl('1', 6, 'primary')       NaN        0.5136   0.5076 0.2491    0.4906        0.2530 1759
+tfm.h5        5   multi  256  timesfm                                         1506.0000        0.4666   0.4592 0.2612    0.4781        0.5425 1755
+tfm.h5        5   multi  256   chance                                               NaN        0.5000   0.5000 0.2380    0.6142        1.0000 1755
+tfm.h5        5   multi  256 fixed_lr test_predictions.pkl('5', 1, 'primary')       NaN        0.5362   0.5355 0.2390    0.5305        0.4832 1755
+    id       vs  d_balanced_acc  d_balanced_acc_lo  d_balanced_acc_hi  p_balanced_acc  d_roc_auc  d_roc_auc_lo  d_roc_auc_hi  p_roc_auc  d_brier  p_brier  holm_balanced_acc  holm_roc_auc
+tfm.h1   chance         -0.0174            -0.0402             0.0061          0.9245    -0.0181       -0.0484        0.0088     0.8985  -0.0109   1.0000             1.0000        1.0000
+tfm.h1 fixed_lr         -0.0311            -0.0607             0.0001          0.9745    -0.0257       -0.0624        0.0108     0.9070  -0.0097   1.0000             1.0000        1.0000
+tfm.h5   chance         -0.0334            -0.0702             0.0060          0.9515    -0.0408       -0.0881        0.0101     0.9475  -0.0231   1.0000             1.0000        1.0000
+tfm.h5 fixed_lr         -0.0696            -0.1195            -0.0234          0.9970    -0.0764       -0.1371       -0.0201     0.9950  -0.0221   1.0000             1.0000        1.0000
+year              2019   2020   2021   2022   2023   2024   2025
+id     role                                                     
+tfm.h1 chance   0.5000 0.5000 0.5000 0.5000 0.5000 0.5000 0.5000
+       fixed_lr 0.5095 0.5350 0.4832 0.4877 0.5042 0.5260 0.5200
+       timesfm  0.4643 0.4684 0.4994 0.4984 0.4992 0.4468 0.5018
+tfm.h5 chance   0.5000 0.5000 0.5000 0.5000 0.5000 0.5000 0.5000
+       fixed_lr 0.5127 0.5466 0.4794 0.5438 0.5273 0.4414 0.5413
+       timesfm  0.4740 0.3928 0.5097 0.4155 0.4893 0.4926 0.4355
+year              2019   2020   2021   2022   2023   2024   2025
+id     role                                                     
+tfm.h1 chance   0.5000 0.5000 0.5000 0.5000 0.5000 0.5000 0.5000
+       fixed_lr 0.5021 0.5152 0.5039 0.4933 0.4625 0.4977 0.5155
+       timesfm  0.4674 0.4656 0.4795 0.5158 0.5046 0.4210 0.5123
+tfm.h5 chance   0.5000 0.5000 0.5000 0.5000 0.5000 0.5000 0.5000
+       fixed_lr 0.4782 0.5193 0.4809 0.4900 0.5400 0.4317 0.5241
+       timesfm  0.4904 0.3772 0.4802 0.3924 0.5070 0.5064 0.4246
+
+2026 check: fresh panel 2025-06-02 .. 2026-10-21, spliced at 2025-12-31, max |log-return mismatch| over the overlap 4.76e-07
+    id  horizon variant  ctx      first       last   n  balanced_acc  roc_auc  brier  pred_up_rate  d_balanced_acc_lo  d_balanced_acc_hi  p_balanced_acc  d_roc_auc_lo  d_roc_auc_hi  p_roc_auc
+tfm.h1        1   multi  256 2026-01-02 2026-10-20 201        0.5021   0.5132 0.2656        0.5821            -0.0609             0.0432          0.5570       -0.0659        0.0807     0.3970
+tfm.h5        5   multi  256 2026-01-02 2026-10-14 197        0.4920   0.4930 0.2573        0.4670            -0.1145             0.0912          0.5920       -0.1503        0.1210     0.5305

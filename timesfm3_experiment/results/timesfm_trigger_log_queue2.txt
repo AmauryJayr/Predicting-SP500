@@ -1,0 +1,110 @@
+== off early key
+/home/tong-nong/miniconda3/envs/timesfm/lib/python3.11/site-packages/numpy/lib/_format_impl.py:393: UserWarning: metadata on a dtype is not saved to an npy/npz. Use another format (such as pickle) to store it.
+  d['descr'] = dtype_to_descr(array.dtype)
+off/early/B/L20/s1: 29s
+off/early/B/L20/s2: 29s
+off/early/C/L20/s0: 31s
+off/early/C/L20/s1: 34s
+off/early/C/L20/s2: 37s
+off/early/D/L20/s0: 40s
+off/early/D/L20/s1: 34s
+off/early/D/L20/s2: 31s
+off/early/E/L20/s0: 34s
+off/early/E/L20/s1: 34s
+off/early/E/L20/s2: 33s
+off/early/F/L20/s0: 34s
+== off test bg
+/home/tong-nong/miniconda3/envs/timesfm/lib/python3.11/site-packages/numpy/lib/_format_impl.py:393: UserWarning: metadata on a dtype is not saved to an npy/npz. Use another format (such as pickle) to store it.
+  d['descr'] = dtype_to_descr(array.dtype)
+off/test/Giid/L20/s0: 40s
+off/test/Giid/L20/s1: 46s
+off/test/Giid/L20/s2: 51s
+off/test/Gb5/L20/s0: 44s
+off/test/Gb5/L20/s1: 47s
+off/test/Gb5/L20/s2: 47s
+off/test/Gb20/L20/s0: 45s
+off/test/Gb20/L20/s1: 43s
+off/test/Gb20/L20/s2: 50s
+off/test/Grev/L20/s0: 54s
+off/test/Gmir/L20/s0: 45s
+off/test/Gsf/L20/s0: 48s
+off/test/Gsf/L20/s1: 44s
+off/test/Gsf/L20/s2: 48s
+off/test/Ggv/L20/s0: 53s
+off/test/Ggv/L20/s1: 57s
+off/test/Ggv/L20/s2: 46s
+off/test/Gnear40/L20/s0: 49s
+off/test/Gnear40/L20/s1: 48s
+off/test/Gnear40/L20/s2: 51s
+off/test/Gold40/L20/s0: 47s
+off/test/Gold40/L20/s1: 51s
+off/test/Gold40/L20/s2: 52s
+off/test/Gnear100/L20/s0: 49s
+off/test/Gnear100/L20/s1: 51s
+off/test/Gnear100/L20/s2: 53s
+off/test/Gold100/L20/s0: 45s
+off/test/Gold100/L20/s1: 44s
+off/test/Gold100/L20/s2: 44s
+== off test lsweep
+/home/tong-nong/miniconda3/envs/timesfm/lib/python3.11/site-packages/numpy/lib/_format_impl.py:393: UserWarning: metadata on a dtype is not saved to an npy/npz. Use another format (such as pickle) to store it.
+  d['descr'] = dtype_to_descr(array.dtype)
+off/test/B/L5/s0: 46s
+off/test/B/L5/s1: 44s
+off/test/B/L5/s2: 44s
+off/test/C/L5/s0: 43s
+off/test/C/L5/s1: 44s
+off/test/C/L5/s2: 43s
+off/test/B/L10/s0: 38s
+off/test/B/L10/s1: 37s
+off/test/B/L10/s2: 37s
+off/test/C/L10/s0: 37s
+off/test/C/L10/s1: 37s
+off/test/C/L10/s2: 37s
+off/test/B/L40/s0: 36s
+off/test/B/L40/s1: 37s
+off/test/B/L40/s2: 37s
+off/test/C/L40/s0: 37s
+off/test/C/L40/s1: 36s
+off/test/C/L40/s2: 37s
+off/test/B/L60/s0: 37s
+off/test/B/L60/s1: 37s
+off/test/B/L60/s2: 37s
+off/test/C/L60/s0: 37s
+off/test/C/L60/s1: 37s
+off/test/C/L60/s2: 37s
+== default test keyAD
+/home/tong-nong/miniconda3/envs/timesfm/lib/python3.11/site-packages/numpy/lib/_format_impl.py:393: UserWarning: metadata on a dtype is not saved to an npy/npz. Use another format (such as pickle) to store it.
+  d['descr'] = dtype_to_descr(array.dtype)
+default/test/A/L20/s0: 37s
+default/test/B/L20/s0: 37s
+default/test/B/L20/s1: 37s
+default/test/B/L20/s2: 37s
+default/test/C/L20/s0: 37s
+default/test/C/L20/s1: 37s
+default/test/C/L20/s2: 36s
+default/test/D/L20/s0: 37s
+default/test/D/L20/s1: 37s
+default/test/D/L20/s2: 37s
+== shape
+{'mode': 'off', 'shape': 'jump_last', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.010523442100205652), 'slope_d5_r20': np.float64(0.0029669894582156553), 'corr_p5_r20': np.float64(-0.10054047594345437), 'sd_r20': np.float64(0.04473887294232052)}
+{'mode': 'off', 'shape': 'jump_last', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.046871149041321586), 'slope_d5_r20': np.float64(-0.009622974525798147), 'corr_p5_r20': np.float64(-0.07111977107640984), 'sd_r20': np.float64(0.05991781226498016)}
+{'mode': 'off', 'shape': 'jump_last', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.08908621673392284), 'slope_d5_r20': np.float64(-0.01818011021484558), 'corr_p5_r20': np.float64(-0.18081235240788468), 'sd_r20': np.float64(0.09513819764916372)}
+{'mode': 'off', 'shape': 'jump_d5', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.5780710931069377), 'slope_d5_r20': np.float64(-0.04141952110038945), 'corr_p5_r20': np.float64(-0.35510515438285384), 'sd_r20': np.float64(0.044738872942320526)}
+{'mode': 'off', 'shape': 'jump_d5', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.4955563247830964), 'slope_d5_r20': np.float64(-0.07835040864036126), 'corr_p5_r20': np.float64(-0.46219591182822906), 'sd_r20': np.float64(0.059917812264980164)}
+{'mode': 'off', 'shape': 'jump_d5', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.3210737548963589), 'slope_d5_r20': np.float64(-0.047548050204485034), 'corr_p5_r20': np.float64(-0.33272648153948775), 'sd_r20': np.float64(0.0951381976491637)}
+{'mode': 'off', 'shape': 'jump_d15', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.42117000703794083), 'slope_d5_r20': np.float64(-0.009336137969774734), 'corr_p5_r20': np.float64(-0.5528963693686312), 'sd_r20': np.float64(0.044738872942320554)}
+{'mode': 'off', 'shape': 'jump_d15', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.2709550264313102), 'slope_d5_r20': np.float64(-0.02499500401481438), 'corr_p5_r20': np.float64(-0.24832362209747053), 'sd_r20': np.float64(0.05991781226498018)}
+{'mode': 'off', 'shape': 'jump_d15', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.24855677476996704), 'slope_d5_r20': np.float64(-0.027960961050111297), 'corr_p5_r20': np.float64(-0.24436574346705897), 'sd_r20': np.float64(0.09513819764916372)}
+{'mode': 'off', 'shape': 'spread5', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.7858365191326616), 'slope_d5_r20': np.float64(0.20275998742370965), 'corr_p5_r20': np.float64(0.6076632016286468), 'sd_r20': np.float64(0.044738872942320505)}
+{'mode': 'off', 'shape': 'spread5', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.3012065451507683), 'slope_d5_r20': np.float64(0.04299162253069262), 'corr_p5_r20': np.float64(0.30715931993253187), 'sd_r20': np.float64(0.059917812264980164)}
+{'mode': 'off', 'shape': 'spread5', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.020705124491957785), 'slope_d5_r20': np.float64(-0.0032941909715350735), 'corr_p5_r20': np.float64(-0.09016431512327298), 'sd_r20': np.float64(0.09513819764916372)}
+{'mode': 'off', 'shape': 'spread20', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.9797917999888692), 'slope_d5_r20': np.float64(0.22986620203698319), 'corr_p5_r20': np.float64(0.816856321724725), 'sd_r20': np.float64(0.044738872942320505)}
+{'mode': 'off', 'shape': 'spread20', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.2107279666650952), 'slope_d5_r20': np.float64(0.01795502808016647), 'corr_p5_r20': np.float64(0.2079456936648314), 'sd_r20': np.float64(0.05991781226498018)}
+{'mode': 'off', 'shape': 'spread20', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.10015067738219942), 'slope_d5_r20': np.float64(-0.011794811184989469), 'corr_p5_r20': np.float64(-0.11685144806506584), 'sd_r20': np.float64(0.09513819764916372)}
+{'mode': 'off', 'shape': 'accel', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.874450159469345), 'slope_d5_r20': np.float64(0.34919947952286684), 'corr_p5_r20': np.float64(0.7227649037719124), 'sd_r20': np.float64(0.04473887294232049)}
+{'mode': 'off', 'shape': 'accel', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.3423277224231786), 'slope_d5_r20': np.float64(0.047897547513808245), 'corr_p5_r20': np.float64(0.34278376079107764), 'sd_r20': np.float64(0.05991781226498016)}
+{'mode': 'off', 'shape': 'accel', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.004118681061102705), 'slope_d5_r20': np.float64(0.0006336513424813917), 'corr_p5_r20': np.float64(-0.06959789903157718), 'sd_r20': np.float64(0.09513819764916372)}
+{'mode': 'off', 'shape': 'decel', 'noise_k': 0.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.5377130835143273), 'slope_d5_r20': np.float64(-0.011643602140442015), 'corr_p5_r20': np.float64(-0.520456464876714), 'sd_r20': np.float64(0.04473887294232051)}
+{'mode': 'off', 'shape': 'decel', 'noise_k': 1.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(0.0248076799158498), 'slope_d5_r20': np.float64(0.0019641277581982494), 'corr_p5_r20': np.float64(0.033874631375488136), 'sd_r20': np.float64(0.05991781226498015)}
+{'mode': 'off', 'shape': 'decel', 'noise_k': 2.0, 'n_paths': 300, 'base_seed': 20261101, 'corr_d5_r20': np.float64(-0.1421938991913652), 'slope_d5_r20': np.float64(-0.015828907808589417), 'corr_p5_r20': np.float64(-0.15076770226630917), 'sd_r20': np.float64(0.09513819764916372)}
+ALLDONE
