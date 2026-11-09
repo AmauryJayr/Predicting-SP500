@@ -7,9 +7,9 @@ data, predict whether SPY goes up on the project's task (h = 1 and h = 5 trading
 worse than the project's fixed logistic regression (0.508 / 0.536) and slightly below a coin flip.
 The setup was pre-registered (`timesfm_preregistration.md`, hash-locked) and the test was run once.
 
-**Start with `TIMESFM_REPORT.md`**: the "In short" section at the top has the result, then
-the follow-up checks (all exploratory, made after seeing the test), a file table in section 9,
-and each test year in detail as an appendix at the end.
+**Start with `TIMESFM_REPORT.md`**: the "In short" section at the top has the result. Then
+come how TimesFM-3 makes a forecast, each test year in detail, the follow-up checks (all exploratory, made after seeing the test)
+and a file table in section 9. What other studies found is at the end.
 `TIMESFM_OTHER_ASSETS.md` repeats the setup on QQQ, GLD, TLT, IEF.
 `timesfm_eli5.md` and `timesfm_terms_explained.md` are plain-language explainers (Traditional Chinese).
 

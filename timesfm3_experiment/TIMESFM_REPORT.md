@@ -24,7 +24,7 @@ Google's TimesFM-3 is a pretrained forecasting model. Used "as is", without any 
 - The other part says "up" on the 2 fall days and "down" on the 2 recovery days: wrong all 4 times.
 - Together, they are worse than a coin flip, and the other part is the reason.
 
-**What SPY did each year.** The SPY numbers come from `timesfm3_experiment/timesfm_explore_spy_years.py` (`timesfm3_experiment/results/timesfm_spy_years.csv`). Prices include dividends, and dates are closing days. Each year gets its own subsection in "Appendix: Each year in detail" at the end of the report.
+**What SPY did each year.** The SPY numbers come from `timesfm3_experiment/timesfm_explore_spy_years.py` (`timesfm3_experiment/results/timesfm_spy_years.csv`). Prices include dividends, and dates are closing days. Each year gets its own subsection in "Each year in detail" below.
 
 | year | SPY over the year | biggest fall from a high | back at that high on | days that moved more than 2% | 5-day windows that went up | TimesFM AUC, h=1 | TimesFM AUC, h=5 |
 |---|---|---|---|---|---|---|---|
@@ -43,38 +43,357 @@ Google's TimesFM-3 is a pretrained forecasting model. Used "as is", without any 
 
 ---
 
-## What other studies found
+## How TimesFM-3 makes a forecast
 
-**Several studies found that TimesFM does not predict stock returns or direction well when used as is.** The closest one tested TimesFM-2.5 on about 600 US stocks and found it scored below an "always up" rule at every horizon. Others found directional accuracy near 50% or no gain over a random walk. TimesFM did better on a different target (volatility), and when it was fine-tuned or pre-trained on financial data.
+Every TimesFM number in this report comes from the same official setup: `multi` with 256 days of history, chosen on 2013–2018 only (sections 3–5 have the full details). One forecast is made each trading day, like this:
 
-| paper | what they tested | what they found |
+| step | what happens | details |
 |---|---|---|
-| [1] Cheung 2026 (arXiv, preprint) | TimesFM-2.5, zero-shot and LoRA fine-tuned. About 600 US stocks (NASDAQ-100 and S&P 500), 2005–2026, direction up to 128 days ahead. | "Zero-shot TimesFM is below the base rate everywhere" (Sec. 6.2): its direction accuracy was below the "always up" rule at every horizon (for example −0.024 at h=2 and −0.125 at h=128 on the S&P 500 list, Table 5). Fine-tuning cut the point error but gave no directional skill over the base rate. |
-| [2] Rahimikia et al. 2025 (arXiv, preprint) | TimesFM 1 and 2, zero-shot, fine-tuned and pre-trained from scratch. Daily excess returns of firms in 94 countries, next day. | "Off-the-shelf pre-trained TSFMs perform poorly in zero-shot and fine-tuning settings" (abstract). TimesFM (500M): out-of-sample R² −2.80% and "directional accuracy just below 50%" (Sec. 1). Only models pre-trained from scratch on finance data did much better. |
-| [3] Noguer i Alonso and Franklin 2026 (arXiv, preprint) | TimesFM-2.5 and others, zero-shot. Five US stocks, 20-day returns, error vs a random walk. | TimesFM-2.5 had one of the two best average ranks, but "gains over the random-walk benchmark are small and sparse" (abstract). On AAPL and JPM the random walk was more accurate than TimesFM-2.5 (Table 7). |
-| [4] Goel et al. 2024 (arXiv, preprint) | TimesFM, zero-shot and fine-tuned. 19 years of daily S&P 100 returns, one-day risk estimate (Value-at-Risk). | "Fine-tuning significantly improves accuracy, showing that zero-shot use is not optimal for VaR" (abstract). The fine-tuned model was among the best methods. |
-| [5] Fu et al. 2024 (arXiv, preprint) | TimesFM on financial prices; continued pre-training on about 100 million price points. | "Due to the irregular nature of price data, directly applying TimesFM gives unsatisfactory results" (abstract). The fine-tuned version did better. |
-| [6] Goel et al. 2025 (arXiv, preprint) | TimesFM, zero-shot and fine-tuned. Realized volatility of the S&P 500 and stocks, one day ahead. | The balance case. Zero-shot was "a reasonable baseline", and the fine-tuned versions "statistically outperform traditional models" (abstract). |
+| 1. Input | TimesFM gets the history up to today's close (day *t*), and nothing later. | SPY's log close over the last 256 trading days (about one year), plus the log close of 15 other series over the same days: QQQ, IWM, the 9 sector ETFs, TLT, IEF, GLD and VIX. The 15 are only extra context ("past-only covariates"); TimesFM does not forecast them. |
+| 2. Forecast | In one pass, it forecasts SPY's close for each of the next 5 trading days. | Each day gets a range instead of a single number: 9 quantiles (10%, 20%, …, 90%). |
+| 3. P(up) | From that range, it reads the chance that the close will be above today's close. | Day 1 of the forecast is used for h=1, and day 5 for h=5 (section 4.2). |
+| 4. Calibration | All scores are shifted by one fixed amount, fitted once on 2013–2018. | The shift keeps the order of the scores, so the AUC does not change (section 4.3). |
+| 5. Call | TimesFM says "up" when the calibrated P(up) is at or above a threshold. | The threshold is the share of up-labels known before 2019: 0.536 at h=1 and 0.581 at h=5. |
+| 6. Next day | The 256-day window moves forward by one day, and everything repeats. | Nothing is ever trained on our data (zero-shot). |
+
+**In plain words:** TimesFM looks at the last year of SPY and 15 related markets and draws a fan of possible prices for the next 5 days. The share of the fan above today's price is its P(up). Our labels are used for one thing only: the fixed shift in step 4.
+
+*Tiny example: 2019-05-13, a day in the 2019 fall.*
+
+| step | value |
+|---|---|
+| Input window | 2018-05-07 to 2019-05-13 (256 trading days) |
+| Forecast for 5 days later, compared with today's close | 10% quantile −1.67%, median +1.79%, 90% quantile +3.97% |
+| P(up) at h=5 | 0.767; 0.765 after calibration |
+| Call | 0.765 is above 0.581, so "up" |
+| What happened | SPY's close 5 days later was above the next day's open (label 1), so the call was right |
+
+*Where the 0.767 comes from.* These are all 9 quantiles of the same forecast, each written as a change from today's close:
+
+| quantile | close 5 days later vs today's close | meaning |
+|---|---|---|
+| 10% | −1.67% | a 10% chance it ends below −1.67% |
+| 20% | −0.29% | a 20% chance it ends below −0.29% |
+| | **0.00% = today's close** | between the 20% and 30% lines: about a 23% chance it ends below |
+| 30% | +0.59% | a 30% chance it ends below +0.59% |
+| 40% | +1.27% | |
+| 50% (median) | +1.79% | the middle of the forecast |
+| 60% | +2.25% | |
+| 70% | +2.73% | |
+| 80% | +3.28% | |
+| 90% | +3.97% | a 90% chance it ends below +3.97% |
+
+**In plain words:** each row is one line of the fan. Today's close sits low in the fan, between the 20% and 30% lines. A straight line between those two points puts it at the 23.3% level. So TimesFM gives about a 23% chance that the close ends lower, and P(up) = 1 − 0.233 = 0.767, the number in the example above.
+
+Two things to keep in mind:
+
+- The label compares the close *h* days later with the **next day's open**, not with today's close. So P(up) answers a slightly different question: the overnight gap is not modelled (section 4.2).
+- The "past 20-day move" used in the year sections and in 1.3 is **not an input**. It is only a yardstick for describing how TimesFM behaves.
+
+---
+
+## Each year in detail
+
+This part goes through the seven test years one by one. How to read it:
+
+- **Which forecast.** The numbers in each table and title are for the official TimesFM score: SPY plus 15 covariates, 256 days of history, calibrated (the `multi` setup of section 4). The SPY-only forecast of 1.3 is used for two checks only: the share of days on which its "turn part" points up and its "rest" pushes up, and the effect of switching detrending off. "Turn vs rest" AUCs split the official score the same way 1.3 does: the part that follows SPY's past 20-day move, and the rest.
+- **Phases.** For 2020, 2022 and 2025 the phases are the falls and recoveries of 1.3 (SPY's own highs and lows). For the other four years the "fall" runs from the day after the year's high to the low, and the "recovery" from the day after the low to the day SPY was back at the high. "other" is every other day of the year. A day belongs to a phase by the date of the forecast.
+- **Columns.** Each cell is a number of days, with its share of the phase in brackets.
+  - *days*: the number of forecasts in the phase.
+  - *market went up after*: the days after which the next 5 days did end higher (the h=5 label).
+  - *TimesFM said "up"*: the days on which the score was above the calibrated threshold (0.58).
+  - *TimesFM right*: the days on which that call matched what happened.
+  - *"always up" right*: how many days a rule that always says "up" would get right. It equals *market went up after*, and is repeated so that the two "right" columns sit side by side.
+  - The average score of each phase is `mean_p` in `timesfm3_experiment/results/timesfm_year_phases.csv`.
+- **Phases are short, so the numbers are noisy.** Many phases have fewer than 30 days, and neighbouring 5-day windows overlap, so a phase holds even fewer independent outcomes. They are marked "(noisy)". Read them as a description, not as a measurement.
+- **Exploratory.** This was done after the test. It describes what happened; it does not change any pre-registered result.
+- **Figures.** Top: SPY's close, with the fall (violet) and recovery (yellow) phases shaded. Bottom: the daily P(up) at h=5 (thin line), its 20-day average (thick line), and the share of 5-day windows that actually went up, also as a 20-day average (dashed line). The grey line is 0.5. All seven figures use the same vertical range in the bottom panel.
+
+### 2019: a calm climb with one small dip
+
+**Result.** h=5 AUC 0.490 (95% interval 0.339 to 0.640): can't tell from a coin flip. h=1 AUC 0.467 (95% interval 0.408 to 0.528): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2019](figures/timesfm_year_2019.png)
+
+**What SPY did.** It went up almost all year. SPY rose 31% over the year. Its biggest fall from a high was 6.6% (May 3 to Jun 3), and it was back at that high on Jun 20. It had 7 days that moved more than 2%. 68% of the 5-day windows went up, and 55% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, May 6 – Jun 3 (noisy) | 20 | 9 (45%) | 18 (90%) | 9 (45%) | 9 (45%) |
+| recovery, Jun 4 – Jun 20 (noisy) | 13 | 8 (62%) | 5 (38%) | 4 (31%) | 8 (62%) |
+| other (rest of the year) | 219 | 154 (70%) | 77 (35%) | 98 (45%) | 154 (70%) |
+
+Over the year it called "up" on 40% of the days (mean P(up) 0.545), while 68% of the windows went up. Balanced accuracy at h=5 was 0.474. Brier score at h=5: 0.254 against 0.228 for the chance baseline (lower is better); at h=1: 0.259 against 0.248.
 
 **In plain words:**
 
-- Two studies (1, 2) test direction directly. Both find zero-shot TimesFM no better than a simple baseline: below "always up" in study 1, and just under 50% in study 2.
-- A third (3) finds no clear win over a random walk.
-- The papers that report a good TimesFM (4, 5, 6) fine-tuned it first, or predicted volatility or risk instead of direction.
-- Tiny example: if 70% of days in the data were up, "always say up" scores 70%. A model must beat that number, not 50%.
+- **In the long "other" stretch (219 days) the market rose in 70% of the windows, but TimesFM said "up" on only 35% of the days.** It was right on 45% of them, so below what always saying "up" would give.
+- Tiny example: of 10 days like these, the market goes up after 7. TimesFM says "up" on 4 of the 10. Even if its 4 were picked at random, it is right on about 0.4 x 7 + 0.6 x 3 = 4.6 of 10; always saying "up" would be right on 7. A low "right" does not by itself make a low AUC, because AUC only looks at the ranking of the scores.
 
-**How our result compares.** Our result fits this pattern. TimesFM-3 got AUC 0.482 (h=1) and 0.459 (h=5), slightly under 0.5. The setups differ. Paper 1 used accuracy against an always-up rule, not AUC, and used single stocks in a list of current members. Paper 2 used single firms, and paper 3 used error on returns. Papers 4–6 predicted risk, not direction. None of them tested TimesFM-3 or SPY direction itself, so they support our direction of result but are not a direct check. We found no paper that reports TimesFM predicting stock direction well.
+**Why it scored this way.**
 
-**References**
+*Checked:*
 
-1. T. Cheung. "When Directional Accuracy Lies: A Base-Rate-Honest Benchmark for LoRA-Adapted TimesFM on Equity Forecasting." arXiv:2607.12248, 2026. https://arxiv.org/abs/2607.12248
-2. E. Rahimikia, H. Ni, W. Wang. "Re(Visiting) Time Series Foundation Models in Finance." arXiv:2511.18578, 2025. https://arxiv.org/abs/2511.18578
-3. M. Noguer i Alonso, R. P. Franklin. "Pretrained Time-Series Foundation Models for Financial Return Forecasting." arXiv:2606.27100, 2026. https://arxiv.org/abs/2606.27100
-4. A. Goel, P. Pasricha, J. Kanniainen. "Time-Series Foundation Model for Value-at-Risk." arXiv:2410.11773, 2024. https://arxiv.org/abs/2410.11773
-5. X. Fu, M. Hirano, K. Imajo. "Financial Fine-tuning a Large Time Series Model." arXiv:2412.09880, 2024. https://arxiv.org/abs/2412.09880
-6. A. Goel, P. Pasricha, M. Magris, J. Kanniainen. "Foundation Time-Series AI Model for Realized Volatility Forecasting." arXiv:2505.11163, 2025. https://arxiv.org/abs/2505.11163
+- The interval for h=5 is wide (0.339 to 0.640) and contains 0.5. The same holds at h=1 (0.408 to 0.528).
+- Phases: the fall has 20 days and the recovery 13 days, so their numbers are noisy. The one long stretch is "other".
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.538 for the 20-day part and 0.474 for the rest.
+- Detrending: the SPY-only forecast scores 0.511 as shipped and 0.507 with detrending off, almost no difference.
+- The fixed logistic regression scored 0.478 at h=5 and 0.502 at h=1, also near 0.5.
+- h=1: AUC against the real label 0.467, against close-to-close 0.520, against the overnight gap 0.547; correlation of the h=1 score with SPY's past 1-day move +0.21 and past 5-day move -0.06. All near 0.5.
 
-All six are arXiv preprints; none is confirmed peer-reviewed.
+*Not found:*
+
+- A year-specific reason for the Brier score being worse than the chance baseline. 1.2 says it is worse at both horizons over the whole test; it was not checked year by year.
+- Any phase that stands out. The two short phases are too small (13 and 20 days) to say anything.
+
+### 2020: the crash and the rebound
+
+**Result.** h=5 AUC 0.377 (95% interval 0.257 to 0.499): clearly worse than a coin flip (only just: the top of the interval is 0.499). h=1 AUC 0.466 (95% interval 0.378 to 0.539): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2020](figures/timesfm_year_2020.png)
+
+**What SPY did.** Covid. SPY fell fast in February and March, then climbed back. SPY rose 18% over the year. Its biggest fall from a high was 33.7% (Feb 19 to Mar 23), and it was back at that high on Aug 10. It had 43 days that moved more than 2%. 63% of the 5-day windows went up, and 58% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, Feb 20 – Mar 23 (noisy) | 23 | 7 (30%) | 23 (100%) | 7 (30%) | 7 (30%) |
+| recovery, Mar 24 – Aug 31 | 112 | 79 (71%) | 69 (62%) | 50 (45%) | 79 (71%) |
+| other (rest of the year) | 118 | 74 (63%) | 75 (64%) | 55 (47%) | 74 (63%) |
+
+Over the year it called "up" on 66% of the days (mean P(up) 0.635), while 63% of the windows went up. Balanced accuracy at h=5 was 0.393. Brier score at h=5: 0.270 against 0.235 for the chance baseline (lower is better); at h=1: 0.257 against 0.246.
+
+**In plain words:**
+
+- **During the fall (23 days, so noisy) TimesFM said "up" on every day, and the market went up in only 30% of the windows.** So it was right on 30%.
+- **During the recovery (112 days) the market went up in 71% of the windows, but TimesFM said "up" on 62% of the days and was right on 45%.** That is below the 71% that always saying "up" would give.
+- Tiny example: of 10 recovery days, the market goes up after 7. TimesFM says "up" on 6 of them; if its 6 were picked at random it is right on about 0.6 x 7 + 0.4 x 3 = 5.4. It gets 4.5 right (45%), fewer than that.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The h=5 interval (0.257 to 0.499) lies below 0.5, but only just: the top is 0.499. At h=1 the interval (0.378 to 0.539) contains 0.5.
+- Phases: the fall has 23 days, so its numbers are noisy. The recovery (112 days) and "other" (118 days) are longer. TimesFM was right on 45% and 47% of the days there, so its calls were also below always saying "up" outside the fall.
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.541 for the 20-day part and 0.357 for the rest. The 20-day part is above 0.5 and the rest is the low part. This agrees with 1.3: the habit of betting on a turn is not what made 2020 bad.
+- In the fall the SPY-only turn part pointed up on 100% of the days and the rest pushed up on 70%.
+- Detrending: the SPY-only forecast scores 0.383 as shipped and 0.380 with detrending off, almost no difference, so it is not the cause here.
+- The fixed logistic regression scored 0.519 at h=5.
+- h=1: AUC against the real label 0.466, against close-to-close 0.434, against the overnight gap 0.477; correlation of the h=1 score with SPY's past 1-day move -0.14 and past 5-day move -0.25.
+
+*Not found:*
+
+- What the "rest" reacts to in 2020. The tests in 1.3 did not find it, and it is not known.
+- A cause for h=1: the intervals contain 0.5, so there is nothing to explain.
+
+### 2021: a smooth climb
+
+**Result.** h=5 AUC 0.480 (95% interval 0.363 to 0.581): can't tell from a coin flip. h=1 AUC 0.480 (95% interval 0.399 to 0.538): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2021](figures/timesfm_year_2021.png)
+
+**What SPY did.** A smooth, calm climb with only small dips. SPY rose 29% over the year. Its biggest fall from a high was 5.1% (Sep 2 to Oct 4), and it was back at that high on Oct 20. It had 8 days that moved more than 2%. 63% of the 5-day windows went up, and 55% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, Sep 3 – Oct 4 (noisy) | 21 | 5 (24%) | 21 (100%) | 5 (24%) | 5 (24%) |
+| recovery, Oct 5 – Oct 20 (noisy) | 12 | 11 (92%) | 12 (100%) | 11 (92%) | 11 (92%) |
+| other (rest of the year) | 219 | 143 (65%) | 195 (89%) | 139 (63%) | 143 (65%) |
+
+Over the year it called "up" on 90% of the days (mean P(up) 0.680), almost like always saying "up". Balanced accuracy at h=5 was 0.510. Brier score at h=5: 0.245 against 0.235 for the chance baseline (lower is better); at h=1: 0.261 against 0.248.
+
+**In plain words:**
+
+- **TimesFM said "up" on 90% of the days in the year, and the market went up in 63% of the windows.** Its calls were right on 63% of the days in the long "other" stretch.
+- Tiny example: 10 days, the market goes up after 6. If TimesFM says "up" on 9 of the 10 days, picked at random, it is right on about 0.9 x 6 + 0.1 x 4 = 5.8 of 10. So a hit rate of 60% or so shows no skill when it says "up" almost every day.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The interval for h=5 (0.363 to 0.581) contains 0.5, and so does the one at h=1 (0.399 to 0.538).
+- Phases: the fall (21 days) and the recovery (12 days) are very short, so their numbers are noisy. TimesFM said "up" on all of them, so it was right exactly when the market went up (24% in the fall, 92% in the recovery); with 21 and 12 days, do not read more into it.
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.564 for the 20-day part and 0.465 for the rest. The SPY-only rest pushed the forecast up on 90% of the "other" days.
+- Detrending: the SPY-only forecast scores 0.493 as shipped and 0.499 with detrending off, almost no difference.
+- 1.3 already reports that in 2021 TimesFM says "up" on 90% of the days, with an accuracy close to always saying "up", but with an AUC of 0.480.
+- The fixed logistic regression scored 0.481 at h=5 and 0.504 at h=1.
+- h=1: AUC against the real label 0.480, against close-to-close 0.480, against the overnight gap 0.543; correlation of the h=1 score with SPY's past 1-day move -0.18 and past 5-day move -0.50.
+
+*Not found:*
+
+- Anything that separates 2021 from a model with no information. Nothing found, and nothing needed: the intervals contain 0.5.
+
+### 2022: a year of falls and bounces
+
+**Result.** h=5 AUC 0.392 (95% interval 0.321 to 0.497): clearly worse than a coin flip (only just: the top of the interval is 0.497). h=1 AUC 0.516 (95% interval 0.473 to 0.585): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2022](figures/timesfm_year_2022.png)
+
+**What SPY did.** The Fed raised interest rates fast. SPY fell in three big steps, with sharp bounces in between. SPY fell 18% over the year. Its biggest fall from a high was 24.5% (Jan 3 to Oct 12), and it was not back at that high within the year. It had 46 days that moved more than 2%. 46% of the 5-day windows went up, and 50% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall 1, Jan 4 – Mar 8 | 44 | 16 (36%) | 41 (93%) | 17 (39%) | 16 (36%) |
+| rebound 1, Mar 9 – Mar 29 (noisy) | 15 | 13 (87%) | 0 (0%) | 2 (13%) | 13 (87%) |
+| fall 2, Mar 30 – Jun 16 | 55 | 16 (29%) | 24 (44%) | 31 (56%) | 16 (29%) |
+| rebound 2, Jun 17 – Aug 16 | 41 | 29 (71%) | 3 (7%) | 15 (37%) | 29 (71%) |
+| fall 3, Aug 17 – Oct 12 | 40 | 11 (28%) | 17 (42%) | 22 (55%) | 11 (28%) |
+| rebound 3, Oct 13 – Nov 30 | 34 | 22 (65%) | 1 (3%) | 11 (32%) | 22 (65%) |
+| other (rest of the year) (noisy) | 22 | 8 (36%) | 9 (41%) | 9 (41%) | 8 (36%) |
+| all three falls | 139 | 43 (31%) | 82 (59%) | 70 (50%) | 43 (31%) |
+| all three rebounds | 90 | 64 (71%) | 4 (4%) | 28 (31%) | 64 (71%) |
+
+Over the year it called "up" on 38% of the days (mean P(up) 0.553), while 46% of the windows went up. Balanced accuracy at h=5 was 0.416. Brier score at h=5: 0.291 against 0.263 for the chance baseline (lower is better); at h=1: 0.254 against 0.251. The three falls and three rebounds are pooled in the last two rows. In the figure, F1–F3 are the falls and R1–R3 the rebounds.
+
+**In plain words:**
+
+- **In the three rebounds together (90 days) the market went up in 71% of the windows, but TimesFM said "up" on only 4% of the days.** It was right on 31%.
+- **In the three falls together (139 days) the market went up in 31% of the windows. TimesFM said "up" on 59% of the days and was right on 50%.** The mean P(up) in the falls (0.61) was higher than in the rebounds (0.46).
+- Tiny example: of 10 rebound days, the market goes up after 7. If TimesFM says "down" on all 10, it is right only on the 3 days that went down: 3 of 10. Always saying "up" would be right on 7.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The h=5 interval (0.321 to 0.497) lies below 0.5, but only just: the top is 0.497. At h=1 (0.473 to 0.585) it contains 0.5.
+- Phases: all three falls and rebounds, except rebound 1 (15 days) and "other" (22 days), have 34 days or more. Rebound 1 and "other" are noisy; the pooled rows are not.
+- The turn and the rest, in the three rebounds pooled: the SPY-only turn part pointed up on 79% of the days, and the rest pushed up on 20%. In the falls pooled: turn 100%, rest 36%. This is the pattern in 1.3: the rest sank the rebounds.
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.507 for the 20-day part and 0.368 for the rest. The rest is the low part.
+- Detrending: the SPY-only forecast scores 0.455 as shipped and 0.442 with detrending off, so it does not explain the low AUC.
+- The fixed logistic regression scored 0.490 at h=5.
+- h=1: AUC against the real label 0.516, against close-to-close 0.443, against the overnight gap 0.480; correlation of the h=1 score with SPY's past 1-day move +0.21 and past 5-day move -0.22. All near 0.5.
+
+*Not found:*
+
+- What the "rest" reacts to in 2022. The tests in 1.3 did not find it, and it is not known.
+- A rebound that behaves differently from the others: in all three, the market went up in 65% to 87% of the windows and TimesFM called "up" on 0% to 7% of the days.
+
+### 2023: a calm climb with a 10% dip
+
+**Result.** h=5 AUC 0.507 (95% interval 0.331 to 0.689): can't tell from a coin flip. h=1 AUC 0.505 (95% interval 0.451 to 0.564): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2023](figures/timesfm_year_2023.png)
+
+**What SPY did.** A steady climb, led by AI and big tech stocks. SPY rose 26% over the year. Its biggest fall from a high was 10.0% (Jul 31 to Oct 27), and it was back at that high on Nov 30. It had 2 days that moved more than 2%. 62% of the 5-day windows went up, and 59% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, Aug 1 – Oct 27 | 63 | 23 (37%) | 33 (52%) | 23 (37%) | 23 (37%) |
+| recovery, Oct 30 – Nov 30 (noisy) | 23 | 20 (87%) | 13 (57%) | 12 (52%) | 20 (87%) |
+| other (rest of the year) | 164 | 112 (68%) | 27 (16%) | 75 (46%) | 112 (68%) |
+
+Over the year it called "up" on only 29% of the days (mean P(up) 0.525), while 62% of the windows went up. Balanced accuracy at h=5 was 0.489. Brier score at h=5: 0.255 against 0.237 for the chance baseline (lower is better); at h=1: 0.255 against 0.245.
+
+**In plain words:**
+
+- **In the long "other" stretch (164 days) the market rose in 68% of the windows, but TimesFM said "up" on only 16% of the days.** It was right on 46%.
+- In the fall (63 days) the market went up in 37% of the windows; TimesFM said "up" on 52% of the days and was right on 37%.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The interval for h=5 (0.331 to 0.689) is the widest of the seven years and contains 0.5; the h=1 interval (0.451 to 0.564) does too.
+- Phases: the recovery has 23 days, so its numbers are noisy. The fall has 63 days. In the fall, the SPY-only turn part pointed up on 100% of the days.
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.483 for the 20-day part and 0.501 for the rest.
+- Detrending: the SPY-only forecast scores 0.447 as shipped and 0.487 with detrending off, so here the shipped detrending lowers it.
+- The fixed logistic regression scored 0.540 at h=5 and 0.463 at h=1.
+- h=1: AUC against the real label 0.505, against close-to-close 0.574, against the overnight gap 0.594; correlation of the h=1 score with SPY's past 1-day move +0.16 and past 5-day move +0.03.
+
+*Not found:*
+
+- Why detrending off is higher than detrending on for the SPY-only forecast in 2023. We saw the gap but did not look into it, and it is not known. The official score (multi) is at 0.507 anyway.
+- Anything that separates 2023 from a model with no information.
+
+### 2024: the h=1 year
+
+**Result.** h=5 AUC 0.506 (95% interval 0.415 to 0.654): can't tell from a coin flip. h=1 AUC 0.421 (95% interval 0.343 to 0.461): clearly worse than a coin flip.
+
+![SPY and the TimesFM h=5 score in 2024](figures/timesfm_year_2024.png)
+
+**What SPY did.** The climb went on, with one short, sharp drop in late July and early August. SPY rose 25% over the year. Its biggest fall from a high was 8.4% (Jul 16 to Aug 5), and it was back at that high on Sep 19. It had 7 days that moved more than 2%. 64% of the 5-day windows went up, and 53% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, Jul 17 – Aug 5 (noisy) | 14 | 4 (29%) | 14 (100%) | 4 (29%) | 4 (29%) |
+| recovery, Aug 6 – Sep 19 | 32 | 24 (75%) | 29 (91%) | 27 (84%) | 24 (75%) |
+| other (rest of the year) | 206 | 134 (65%) | 145 (70%) | 111 (54%) | 134 (65%) |
+
+Over the year it called "up" on 75% of the days at h=5 (mean P(up) 0.647), while 64% of the windows went up. Balanced accuracy at h=5 was 0.493. At h=1 it called "up" on 65% of the days (up-rate 53%) and the balanced accuracy was 0.447. Brier score at h=5: 0.237 against 0.233 for the chance baseline (lower is better); at h=1: 0.266 against 0.249.
+
+**In plain words:**
+
+- **At h=5 the year looks like a coin flip: AUC 0.506. At h=1 it is the worst year: AUC 0.421, and the whole interval is below 0.5.**
+- In the fall (14 days, so noisy) TimesFM said "up" on every day and was right on 29%. In the recovery (32 days) it said "up" on 91% of the days and was right on 84%. The market simply went up in 75% of those windows.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The h=5 interval (0.415 to 0.654) contains 0.5. The h=1 interval (0.343 to 0.461) is entirely below 0.5.
+- Phases (h=5): the fall has 14 days and the recovery 32, so their numbers are noisy.
+- Turn vs rest (h=5): splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.531 for the 20-day part and 0.489 for the rest.
+- Detrending: the SPY-only forecast scores 0.468 as shipped and 0.428 with detrending off: here switching it off makes the SPY-only forecast worse.
+- h=1 diagnostics: the score's AUC is 0.421 against the real label (open to close), 0.441 against close-to-close and 0.502 against the overnight gap. So the low value is not from the overnight gap (that AUC is near 0.5), and it is not specific to the label's open: close-to-close is also below 0.5, but less so.
+- The h=1 score follows SPY's past 1-day move more in 2024 (correlation +0.29) than in any other year (the others run from -0.18 to +0.21). But the plain rule "say up after an up day" scores 0.467 in 2024, and "say up after a 5-day rise" scores 0.454. These rules are near 0.5 too, so past moves do not account for 0.421.
+- The fixed logistic regression scored 0.498 at h=1, near 0.5.
+
+*Not found:*
+
+- **An explanation of the h=1 value of 0.421.** None of the checks above explains it: not the overnight gap, not the label, not the past 1-day or 5-day move. The cause is not known.
+- A test of whether it could be luck given how many year and horizon cells we looked at. We did not run one.
+
+### 2025: the tariff fall and the recovery
+
+**Result.** h=5 AUC 0.425 (95% interval 0.323 to 0.546): can't tell from a coin flip. h=1 AUC 0.512 (95% interval 0.415 to 0.595): can't tell from a coin flip.
+
+![SPY and the TimesFM h=5 score in 2025](figures/timesfm_year_2025.png)
+
+**What SPY did.** The tariff shock. SPY fell from February to early April, then climbed back. SPY rose 18% over the year. Its biggest fall from a high was 18.8% (Feb 19 to Apr 8), and it was back at that high on Jun 26. It had 14 days that moved more than 2%. 64% of the 5-day windows went up, and 53% of the days closed above their open (the h=1 label).
+
+**What TimesFM predicted.**
+
+| phase (dates) | days | market went up after | TimesFM said "up" | TimesFM right | "always up" right |
+|---|---|---|---|---|---|
+| fall, Feb 20 – Apr 8 | 34 | 13 (38%) | 34 (100%) | 13 (38%) | 13 (38%) |
+| recovery, Apr 9 – Sep 30 | 120 | 91 (76%) | 17 (14%) | 40 (33%) | 91 (76%) |
+| other (rest of the year) | 91 | 52 (57%) | 50 (55%) | 49 (54%) | 52 (57%) |
+
+Over the year it called "up" on 41% of the days (mean P(up) 0.554), while 64% of the windows went up. Balanced accuracy at h=5 was 0.436. Brier score at h=5: 0.276 against 0.234 for the chance baseline (lower is better); at h=1: 0.261 against 0.249.
+
+**In plain words:**
+
+- **In the recovery (120 days) the market went up in 76% of the windows, but TimesFM said "up" on only 14% of the days.** It was right on 33%.
+- In the fall (34 days) it said "up" on every day, and the market went up in 38% of the windows. It was right on 38%.
+- Tiny example: of 10 recovery days, the market goes up after 7. TimesFM says "up" on about 1 of them and "down" on the other 9. At most 3 of the 9 "down" calls can be right, so most calls are wrong.
+
+**Why it scored this way.**
+
+*Checked:*
+
+- The h=5 interval (0.323 to 0.546) contains 0.5, even though the point value 0.425 is low. The h=1 interval (0.415 to 0.595) contains 0.5 too.
+- Phases: the fall has 34 days, which is a little above 30; "other" has 91; the recovery has 120.
+- The SPY-only split in the recovery: the turn part pointed up on 82% of the days and the rest pushed up on only 20%. In the fall the rest pushed up on 88%.
+- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.497 for the 20-day part and 0.407 for the rest. The rest is the low part.
+- Detrending: the SPY-only forecast scores 0.459 as shipped and 0.496 with detrending off. 1.3 found that in 2025 the detrending step, which draws a straight line through the past year and continues it, pulled the forecast down during the recovery; this agrees with it.
+- The fixed logistic regression scored 0.524 at h=5.
+- h=1: AUC against the real label 0.512, against close-to-close 0.492, against the overnight gap 0.426; correlation of the h=1 score with SPY's past 1-day move +0.02 and past 5-day move -0.31.
+
+*Not found:*
+
+- What the rest reacts to in the part of 2025 that is not the detrending line. 1.3 did not find it, and it is not known.
+- Anything unusual at h=1: the AUC is 0.512 and its interval contains 0.5.
 
 ---
 
@@ -563,7 +882,7 @@ $PY timesfm_study.py test         # one-shot 2019-2025 run + 2026 check (~10 min
 $PY timesfm_explore_years.py      # exploratory section 1.3 tables from the saved test predictions (seconds)
 $PY timesfm_explore_split.py      # section 1.3, yearly intervals and turn part vs rest (seconds, saved forecasts)
 $PY timesfm_explore_spy_years.py  # "In short" section at the top, SPY per year (seconds)
-$PY timesfm_explore_year_detail.py # "Appendix: Each year in detail": per-year tables, h=1 checks and figures (seconds, saved forecasts)
+$PY timesfm_explore_year_detail.py # "Each year in detail": per-year tables, h=1 checks and figures (seconds, saved forecasts)
 $PY timesfm_verify_background.py  # section 1.3, extra older-history tests (~8 min)
 $PY timesfm_other_assets.py       # TIMESFM_OTHER_ASSETS.md (~3 min)
 # timesfm_verify_{detrend,cause,trigger,rest}.py take subcommands; see the docstring at the top of each
@@ -575,7 +894,7 @@ $PY timesfm_other_assets.py       # TIMESFM_OTHER_ASSETS.md (~3 min)
 | `timesfm3_experiment/timesfm_study.py` | `smoke`, `grid`, `checks`, `report`, `validate`, `select`, `test [--dry-val]` |
 | `timesfm3_experiment/timesfm_explore_years.py` | exploratory section 1.3: per-year AUCs, score correlations, simple-rule comparison, falls and recoveries |
 | `timesfm3_experiment/timesfm_explore_spy_years.py` | "In short" section at the top: what SPY did each year, next to TimesFM's yearly AUC (`timesfm3_experiment/results/timesfm_spy_years.csv`) |
-| `timesfm3_experiment/timesfm_explore_year_detail.py` | "Appendix: Each year in detail": per-year AUC with intervals, phase tables, turn vs rest, detrending on/off, h=1 label checks (`timesfm3_experiment/results/timesfm_year_detail.csv`, `timesfm_year_phases.csv`, `figures/timesfm_year_<YYYY>.png`) |
+| `timesfm3_experiment/timesfm_explore_year_detail.py` | "Each year in detail": per-year AUC with intervals, phase tables, turn vs rest, detrending on/off, h=1 label checks (`timesfm3_experiment/results/timesfm_year_detail.csv`, `timesfm_year_phases.csv`, `figures/timesfm_year_<YYYY>.png`) |
 | `timesfm3_experiment/timesfm_explore_split.py` | section 1.3: yearly AUC intervals; turn part vs rest of the forecast, per year and per stretch (`timesfm3_experiment/results/timesfm_split_years.csv`, `timesfm_split_stretches.csv`) |
 | `timesfm3_experiment/timesfm_verify_rest.py` | section 1.3 "What the rest reacts to": input changes scored on the rest of the forecast, flexible-model check, synthetic drift test (`timesfm3_experiment/results/timesfm_rest_*.csv`) |
 | `timesfm3_experiment/timesfm_verify_detrend.py` | section 1.3 step 1: detrending switched off or forced on (`timesfm3_experiment/results/timesfm_detrend_*.csv`) |
@@ -598,299 +917,35 @@ $PY timesfm_other_assets.py       # TIMESFM_OTHER_ASSETS.md (~3 min)
 
 ---
 
-## Appendix: Each year in detail
+## What other studies found
 
-This part goes through the seven test years one by one. How to read it:
+**Several studies found that TimesFM does not predict stock returns or direction well when used as is.** The closest one tested TimesFM-2.5 on about 600 US stocks and found it scored below an "always up" rule at every horizon. Others found directional accuracy near 50% or no gain over a random walk. TimesFM did better on a different target (volatility), and when it was fine-tuned or pre-trained on financial data.
 
-- **Which forecast.** The numbers in each table and title are for the official TimesFM score: SPY plus 15 covariates, 256 days of history, calibrated (the `multi` setup of section 4). The SPY-only forecast of 1.3 is used for two checks only: the share of days on which its "turn part" points up and its "rest" pushes up, and the effect of switching detrending off. "Turn vs rest" AUCs split the official score the same way 1.3 does: the part that follows SPY's past 20-day move, and the rest.
-- **Phases.** For 2020, 2022 and 2025 the phases are the falls and recoveries of 1.3 (SPY's own highs and lows). For the other four years the "fall" runs from the day after the year's high to the low, and the "recovery" from the day after the low to the day SPY was back at the high. "other" is every other day of the year. A day belongs to a phase by the date of the forecast.
-- **Columns.** *days* is the number of forecasts in the phase. *went up* is the share of those days after which the next 5 days did end higher (the h=5 label). *mean P(up)* is the average score. *called up* is the share of days on which the score was above the calibrated threshold, so TimesFM said "up". *right* is the share of days on which that call matched what happened. Always saying "up" would be right exactly as often as *went up*.
-- **Phases are short, so the numbers are noisy.** Many phases have fewer than 30 days, and neighbouring 5-day windows overlap, so a phase holds even fewer independent outcomes. They are marked "(noisy)". Read them as a description, not as a measurement.
-- **Exploratory.** This was done after the test. It describes what happened; it does not change any pre-registered result.
-- **Figures.** Top: SPY's close, with the fall (violet) and recovery (yellow) phases shaded. Bottom: the daily P(up) at h=5 (thin line), its 20-day average (thick line), and the share of 5-day windows that actually went up, also as a 20-day average (dashed line). The grey line is 0.5. All seven figures use the same vertical range in the bottom panel.
-
-### 2019: a calm climb with one small dip
-
-**Result.** h=5 AUC 0.490 (95% interval 0.339 to 0.640): can't tell from a coin flip. h=1 AUC 0.467 (95% interval 0.408 to 0.528): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2019](figures/timesfm_year_2019.png)
-
-**What SPY did.** It went up almost all year. SPY rose 31% over the year. Its biggest fall from a high was 6.6% (May 3 to Jun 3), and it was back at that high on Jun 20. It had 7 days that moved more than 2%. 68% of the 5-day windows went up, and 55% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall (noisy) | 20 | 45% | 0.70 | 90% | 45% |
-| recovery (noisy) | 13 | 62% | 0.58 | 38% | 31% |
-| other | 219 | 70% | 0.53 | 35% | 45% |
-
-Over the year it called "up" on 40% of the days (mean P(up) 0.545), while 68% of the windows went up. Balanced accuracy at h=5 was 0.474. Brier score at h=5: 0.254 against 0.228 for the chance baseline (lower is better); at h=1: 0.259 against 0.248.
+| paper | what they tested | what they found |
+|---|---|---|
+| [1] Cheung 2026 (arXiv, preprint) | TimesFM-2.5, zero-shot and LoRA fine-tuned. About 600 US stocks (NASDAQ-100 and S&P 500), 2005–2026, direction up to 128 days ahead. | "Zero-shot TimesFM is below the base rate everywhere" (Sec. 6.2): its direction accuracy was below the "always up" rule at every horizon (for example −0.024 at h=2 and −0.125 at h=128 on the S&P 500 list, Table 5). Fine-tuning cut the point error but gave no directional skill over the base rate. |
+| [2] Rahimikia et al. 2025 (arXiv, preprint) | TimesFM 1 and 2, zero-shot, fine-tuned and pre-trained from scratch. Daily excess returns of firms in 94 countries, next day. | "Off-the-shelf pre-trained TSFMs perform poorly in zero-shot and fine-tuning settings" (abstract). TimesFM (500M): out-of-sample R² −2.80% and "directional accuracy just below 50%" (Sec. 1). Only models pre-trained from scratch on finance data did much better. |
+| [3] Noguer i Alonso and Franklin 2026 (arXiv, preprint) | TimesFM-2.5 and others, zero-shot. Five US stocks, 20-day returns, error vs a random walk. | TimesFM-2.5 had one of the two best average ranks, but "gains over the random-walk benchmark are small and sparse" (abstract). On AAPL and JPM the random walk was more accurate than TimesFM-2.5 (Table 7). |
+| [4] Goel et al. 2024 (arXiv, preprint) | TimesFM, zero-shot and fine-tuned. 19 years of daily S&P 100 returns, one-day risk estimate (Value-at-Risk). | "Fine-tuning significantly improves accuracy, showing that zero-shot use is not optimal for VaR" (abstract). The fine-tuned model was among the best methods. |
+| [5] Fu et al. 2024 (arXiv, preprint) | TimesFM on financial prices; continued pre-training on about 100 million price points. | "Due to the irregular nature of price data, directly applying TimesFM gives unsatisfactory results" (abstract). The fine-tuned version did better. |
+| [6] Goel et al. 2025 (arXiv, preprint) | TimesFM, zero-shot and fine-tuned. Realized volatility of the S&P 500 and stocks, one day ahead. | The balance case. Zero-shot was "a reasonable baseline", and the fine-tuned versions "statistically outperform traditional models" (abstract). |
 
 **In plain words:**
 
-- **In the long "other" stretch (219 days) the market rose in 70% of the windows, but TimesFM said "up" on only 35% of the days.** It was right on 45% of them, so below what always saying "up" would give.
-- Tiny example: of 10 days like these, the market goes up after 7. TimesFM says "up" on 4 of the 10. Even if its 4 were picked at random, it is right on about 0.4 x 7 + 0.6 x 3 = 4.6 of 10; always saying "up" would be right on 7. A low "right" does not by itself make a low AUC, because AUC only looks at the ranking of the scores.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The interval for h=5 is wide (0.339 to 0.640) and contains 0.5. The same holds at h=1 (0.408 to 0.528).
-- Phases: the fall has 20 days and the recovery 13 days, so their numbers are noisy. The one long stretch is "other".
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.538 for the 20-day part and 0.474 for the rest.
-- Detrending: the SPY-only forecast scores 0.511 as shipped and 0.507 with detrending off, almost no difference.
-- The fixed logistic regression scored 0.478 at h=5 and 0.502 at h=1, also near 0.5.
-- h=1: AUC against the real label 0.467, against close-to-close 0.520, against the overnight gap 0.547; correlation of the h=1 score with SPY's past 1-day move +0.21 and past 5-day move -0.06. All near 0.5.
-
-*Not found:*
-
-- A year-specific reason for the Brier score being worse than the chance baseline. 1.2 says it is worse at both horizons over the whole test; it was not checked year by year.
-- Any phase that stands out. The two short phases are too small (13 and 20 days) to say anything.
-
-### 2020: the crash and the rebound
-
-**Result.** h=5 AUC 0.377 (95% interval 0.257 to 0.499): clearly worse than a coin flip (only just: the top of the interval is 0.499). h=1 AUC 0.466 (95% interval 0.378 to 0.539): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2020](figures/timesfm_year_2020.png)
-
-**What SPY did.** Covid. SPY fell fast in February and March, then climbed back. SPY rose 18% over the year. Its biggest fall from a high was 33.7% (Feb 19 to Mar 23), and it was back at that high on Aug 10. It had 43 days that moved more than 2%. 63% of the 5-day windows went up, and 58% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall (noisy) | 23 | 30% | 0.83 | 100% | 30% |
-| recovery | 112 | 71% | 0.60 | 62% | 45% |
-| other | 118 | 63% | 0.63 | 64% | 47% |
-
-Over the year it called "up" on 66% of the days (mean P(up) 0.635), while 63% of the windows went up. Balanced accuracy at h=5 was 0.393. Brier score at h=5: 0.270 against 0.235 for the chance baseline (lower is better); at h=1: 0.257 against 0.246.
-
-**In plain words:**
-
-- **During the fall (23 days, so noisy) TimesFM said "up" on every day, and the market went up in only 30% of the windows.** So it was right on 30%.
-- **During the recovery (112 days) the market went up in 71% of the windows, but TimesFM said "up" on 62% of the days and was right on 45%.** That is below the 71% that always saying "up" would give.
-- Tiny example: of 10 recovery days, the market goes up after 7. TimesFM says "up" on 6 of them; if its 6 were picked at random it is right on about 0.6 x 7 + 0.4 x 3 = 5.4. It gets 4.5 right (45%), fewer than that.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The h=5 interval (0.257 to 0.499) lies below 0.5, but only just: the top is 0.499. At h=1 the interval (0.378 to 0.539) contains 0.5.
-- Phases: the fall has 23 days, so its numbers are noisy. The recovery (112 days) and "other" (118 days) are longer. TimesFM was right on 45% and 47% of the days there, so its calls were also below always saying "up" outside the fall.
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.541 for the 20-day part and 0.357 for the rest. The 20-day part is above 0.5 and the rest is the low part. This agrees with 1.3: the habit of betting on a turn is not what made 2020 bad.
-- In the fall the SPY-only turn part pointed up on 100% of the days and the rest pushed up on 70%.
-- Detrending: the SPY-only forecast scores 0.383 as shipped and 0.380 with detrending off, almost no difference, so it is not the cause here.
-- The fixed logistic regression scored 0.519 at h=5.
-- h=1: AUC against the real label 0.466, against close-to-close 0.434, against the overnight gap 0.477; correlation of the h=1 score with SPY's past 1-day move -0.14 and past 5-day move -0.25.
-
-*Not found:*
-
-- What the "rest" reacts to in 2020. The tests in 1.3 did not find it, and it is not known.
-- A cause for h=1: the intervals contain 0.5, so there is nothing to explain.
-
-### 2021: a smooth climb
-
-**Result.** h=5 AUC 0.480 (95% interval 0.363 to 0.581): can't tell from a coin flip. h=1 AUC 0.480 (95% interval 0.399 to 0.538): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2021](figures/timesfm_year_2021.png)
-
-**What SPY did.** A smooth, calm climb with only small dips. SPY rose 29% over the year. Its biggest fall from a high was 5.1% (Sep 2 to Oct 4), and it was back at that high on Oct 20. It had 8 days that moved more than 2%. 63% of the 5-day windows went up, and 55% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall (noisy) | 21 | 24% | 0.78 | 100% | 24% |
-| recovery (noisy) | 12 | 92% | 0.65 | 100% | 92% |
-| other | 219 | 65% | 0.67 | 89% | 63% |
-
-Over the year it called "up" on 90% of the days (mean P(up) 0.680), almost like always saying "up". Balanced accuracy at h=5 was 0.510. Brier score at h=5: 0.245 against 0.235 for the chance baseline (lower is better); at h=1: 0.261 against 0.248.
-
-**In plain words:**
-
-- **TimesFM said "up" on 90% of the days in the year, and the market went up in 63% of the windows.** Its calls were right on 63% of the days in the long "other" stretch.
-- Tiny example: 10 days, the market goes up after 6. If TimesFM says "up" on 9 of the 10 days, picked at random, it is right on about 0.9 x 6 + 0.1 x 4 = 5.8 of 10. So a hit rate of 60% or so shows no skill when it says "up" almost every day.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The interval for h=5 (0.363 to 0.581) contains 0.5, and so does the one at h=1 (0.399 to 0.538).
-- Phases: the fall (21 days) and the recovery (12 days) are very short, so their numbers are noisy. TimesFM said "up" on all of them, so it was right exactly when the market went up (24% in the fall, 92% in the recovery); with 21 and 12 days, do not read more into it.
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.564 for the 20-day part and 0.465 for the rest. The SPY-only rest pushed the forecast up on 90% of the "other" days.
-- Detrending: the SPY-only forecast scores 0.493 as shipped and 0.499 with detrending off, almost no difference.
-- 1.3 already reports that in 2021 TimesFM says "up" on 90% of the days, with an accuracy close to always saying "up", but with an AUC of 0.480.
-- The fixed logistic regression scored 0.481 at h=5 and 0.504 at h=1.
-- h=1: AUC against the real label 0.480, against close-to-close 0.480, against the overnight gap 0.543; correlation of the h=1 score with SPY's past 1-day move -0.18 and past 5-day move -0.50.
-
-*Not found:*
-
-- Anything that separates 2021 from a model with no information. Nothing found, and nothing needed: the intervals contain 0.5.
-
-### 2022: a year of falls and bounces
-
-**Result.** h=5 AUC 0.392 (95% interval 0.321 to 0.497): clearly worse than a coin flip (only just: the top of the interval is 0.497). h=1 AUC 0.516 (95% interval 0.473 to 0.585): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2022](figures/timesfm_year_2022.png)
-
-**What SPY did.** The Fed raised interest rates fast. SPY fell in three big steps, with sharp bounces in between. SPY fell 18% over the year. Its biggest fall from a high was 24.5% (Jan 3 to Oct 12), and it was not back at that high within the year. It had 46 days that moved more than 2%. 46% of the 5-day windows went up, and 50% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall 1 | 44 | 36% | 0.72 | 93% | 39% |
-| rebound 1 (noisy) | 15 | 87% | 0.47 | 0% | 13% |
-| fall 2 | 55 | 29% | 0.56 | 44% | 56% |
-| rebound 2 | 41 | 71% | 0.49 | 7% | 37% |
-| fall 3 | 40 | 28% | 0.55 | 42% | 55% |
-| rebound 3 | 34 | 65% | 0.43 | 3% | 32% |
-| other (noisy) | 22 | 36% | 0.57 | 41% | 41% |
-| falls (all) | 139 | 31% | 0.61 | 59% | 50% |
-| rebounds (all) | 90 | 71% | 0.46 | 4% | 31% |
-
-Over the year it called "up" on 38% of the days (mean P(up) 0.553), while 46% of the windows went up. Balanced accuracy at h=5 was 0.416. Brier score at h=5: 0.291 against 0.263 for the chance baseline (lower is better); at h=1: 0.254 against 0.251. The three falls and three rebounds are pooled in the last two rows. In the figure, F1–F3 are the falls and R1–R3 the rebounds.
-
-**In plain words:**
-
-- **In the three rebounds together (90 days) the market went up in 71% of the windows, but TimesFM said "up" on only 4% of the days.** It was right on 31%.
-- **In the three falls together (139 days) the market went up in 31% of the windows. TimesFM said "up" on 59% of the days and was right on 50%.** The mean P(up) in the falls (0.61) was higher than in the rebounds (0.46).
-- Tiny example: of 10 rebound days, the market goes up after 7. If TimesFM says "down" on all 10, it is right only on the 3 days that went down: 3 of 10. Always saying "up" would be right on 7.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The h=5 interval (0.321 to 0.497) lies below 0.5, but only just: the top is 0.497. At h=1 (0.473 to 0.585) it contains 0.5.
-- Phases: all three falls and rebounds, except rebound 1 (15 days) and "other" (22 days), have 34 days or more. Rebound 1 and "other" are noisy; the pooled rows are not.
-- The turn and the rest, in the three rebounds pooled: the SPY-only turn part pointed up on 79% of the days, and the rest pushed up on 20%. In the falls pooled: turn 100%, rest 36%. This is the pattern in 1.3: the rest sank the rebounds.
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.507 for the 20-day part and 0.368 for the rest. The rest is the low part.
-- Detrending: the SPY-only forecast scores 0.455 as shipped and 0.442 with detrending off, so it does not explain the low AUC.
-- The fixed logistic regression scored 0.490 at h=5.
-- h=1: AUC against the real label 0.516, against close-to-close 0.443, against the overnight gap 0.480; correlation of the h=1 score with SPY's past 1-day move +0.21 and past 5-day move -0.22. All near 0.5.
-
-*Not found:*
-
-- What the "rest" reacts to in 2022. The tests in 1.3 did not find it, and it is not known.
-- A rebound that behaves differently from the others: in all three, the market went up in 65% to 87% of the windows and TimesFM called "up" on 0% to 7% of the days.
-
-### 2023: a calm climb with a 10% dip
-
-**Result.** h=5 AUC 0.507 (95% interval 0.331 to 0.689): can't tell from a coin flip. h=1 AUC 0.505 (95% interval 0.451 to 0.564): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2023](figures/timesfm_year_2023.png)
-
-**What SPY did.** A steady climb, led by AI and big tech stocks. SPY rose 26% over the year. Its biggest fall from a high was 10.0% (Jul 31 to Oct 27), and it was back at that high on Nov 30. It had 2 days that moved more than 2%. 62% of the 5-day windows went up, and 59% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall | 63 | 37% | 0.61 | 52% | 37% |
-| recovery (noisy) | 23 | 87% | 0.58 | 57% | 52% |
-| other | 164 | 68% | 0.49 | 16% | 46% |
-
-Over the year it called "up" on only 29% of the days (mean P(up) 0.525), while 62% of the windows went up. Balanced accuracy at h=5 was 0.489. Brier score at h=5: 0.255 against 0.237 for the chance baseline (lower is better); at h=1: 0.255 against 0.245.
-
-**In plain words:**
-
-- **In the long "other" stretch (164 days) the market rose in 68% of the windows, but TimesFM said "up" on only 16% of the days.** It was right on 46%.
-- In the fall (63 days) the market went up in 37% of the windows; TimesFM said "up" on 52% of the days and was right on 37%.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The interval for h=5 (0.331 to 0.689) is the widest of the seven years and contains 0.5; the h=1 interval (0.451 to 0.564) does too.
-- Phases: the recovery has 23 days, so its numbers are noisy. The fall has 63 days. In the fall, the SPY-only turn part pointed up on 100% of the days.
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.483 for the 20-day part and 0.501 for the rest.
-- Detrending: the SPY-only forecast scores 0.447 as shipped and 0.487 with detrending off, so here the shipped detrending lowers it.
-- The fixed logistic regression scored 0.540 at h=5 and 0.463 at h=1.
-- h=1: AUC against the real label 0.505, against close-to-close 0.574, against the overnight gap 0.594; correlation of the h=1 score with SPY's past 1-day move +0.16 and past 5-day move +0.03.
-
-*Not found:*
-
-- Why detrending off is higher than detrending on for the SPY-only forecast in 2023. We saw the gap but did not look into it, and it is not known. The official score (multi) is at 0.507 anyway.
-- Anything that separates 2023 from a model with no information.
-
-### 2024: the h=1 year
-
-**Result.** h=5 AUC 0.506 (95% interval 0.415 to 0.654): can't tell from a coin flip. h=1 AUC 0.421 (95% interval 0.343 to 0.461): clearly worse than a coin flip.
-
-![SPY and the TimesFM h=5 score in 2024](figures/timesfm_year_2024.png)
-
-**What SPY did.** The climb went on, with one short, sharp drop in late July and early August. SPY rose 25% over the year. Its biggest fall from a high was 8.4% (Jul 16 to Aug 5), and it was back at that high on Sep 19. It had 7 days that moved more than 2%. 64% of the 5-day windows went up, and 53% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall (noisy) | 14 | 29% | 0.70 | 100% | 29% |
-| recovery | 32 | 75% | 0.74 | 91% | 84% |
-| other | 206 | 65% | 0.63 | 70% | 54% |
-
-Over the year it called "up" on 75% of the days at h=5 (mean P(up) 0.647), while 64% of the windows went up. Balanced accuracy at h=5 was 0.493. At h=1 it called "up" on 65% of the days (up-rate 53%) and the balanced accuracy was 0.447. Brier score at h=5: 0.237 against 0.233 for the chance baseline (lower is better); at h=1: 0.266 against 0.249.
-
-**In plain words:**
-
-- **At h=5 the year looks like a coin flip: AUC 0.506. At h=1 it is the worst year: AUC 0.421, and the whole interval is below 0.5.**
-- In the fall (14 days, so noisy) TimesFM said "up" on every day and was right on 29%. In the recovery (32 days) it said "up" on 91% of the days and was right on 84%. The market simply went up in 75% of those windows.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The h=5 interval (0.415 to 0.654) contains 0.5. The h=1 interval (0.343 to 0.461) is entirely below 0.5.
-- Phases (h=5): the fall has 14 days and the recovery 32, so their numbers are noisy.
-- Turn vs rest (h=5): splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.531 for the 20-day part and 0.489 for the rest.
-- Detrending: the SPY-only forecast scores 0.468 as shipped and 0.428 with detrending off: here switching it off makes the SPY-only forecast worse.
-- h=1 diagnostics: the score's AUC is 0.421 against the real label (open to close), 0.441 against close-to-close and 0.502 against the overnight gap. So the low value is not from the overnight gap (that AUC is near 0.5), and it is not specific to the label's open: close-to-close is also below 0.5, but less so.
-- The h=1 score follows SPY's past 1-day move more in 2024 (correlation +0.29) than in any other year (the others run from -0.18 to +0.21). But the plain rule "say up after an up day" scores 0.467 in 2024, and "say up after a 5-day rise" scores 0.454. These rules are near 0.5 too, so past moves do not account for 0.421.
-- The fixed logistic regression scored 0.498 at h=1, near 0.5.
-
-*Not found:*
-
-- **An explanation of the h=1 value of 0.421.** None of the checks above explains it: not the overnight gap, not the label, not the past 1-day or 5-day move. The cause is not known.
-- A test of whether it could be luck given how many year and horizon cells we looked at. We did not run one.
-
-### 2025: the tariff fall and the recovery
-
-**Result.** h=5 AUC 0.425 (95% interval 0.323 to 0.546): can't tell from a coin flip. h=1 AUC 0.512 (95% interval 0.415 to 0.595): can't tell from a coin flip.
-
-![SPY and the TimesFM h=5 score in 2025](figures/timesfm_year_2025.png)
-
-**What SPY did.** The tariff shock. SPY fell from February to early April, then climbed back. SPY rose 18% over the year. Its biggest fall from a high was 18.8% (Feb 19 to Apr 8), and it was back at that high on Jun 26. It had 14 days that moved more than 2%. 64% of the 5-day windows went up, and 53% of the days closed above their open (the h=1 label).
-
-**What TimesFM predicted.**
-
-| phase | days | went up | mean P(up) | called up | right |
-|---|---|---|---|---|---|
-| fall | 34 | 38% | 0.75 | 100% | 38% |
-| recovery | 120 | 76% | 0.48 | 14% | 33% |
-| other | 91 | 57% | 0.58 | 55% | 54% |
-
-Over the year it called "up" on 41% of the days (mean P(up) 0.554), while 64% of the windows went up. Balanced accuracy at h=5 was 0.436. Brier score at h=5: 0.276 against 0.234 for the chance baseline (lower is better); at h=1: 0.261 against 0.249.
-
-**In plain words:**
-
-- **In the recovery (120 days) the market went up in 76% of the windows, but TimesFM said "up" on only 14% of the days.** It was right on 33%.
-- In the fall (34 days) it said "up" on every day, and the market went up in 38% of the windows. It was right on 38%.
-- Tiny example: of 10 recovery days, the market goes up after 7. TimesFM says "up" on about 1 of them and "down" on the other 9. At most 3 of the 9 "down" calls can be right, so most calls are wrong.
-
-**Why it scored this way.**
-
-*Checked:*
-
-- The h=5 interval (0.323 to 0.546) contains 0.5, even though the point value 0.425 is low. The h=1 interval (0.415 to 0.595) contains 0.5 too.
-- Phases: the fall has 34 days, which is a little above 30; "other" has 91; the recovery has 120.
-- The SPY-only split in the recovery: the turn part pointed up on 82% of the days and the rest pushed up on only 20%. In the fall the rest pushed up on 88%.
-- Turn vs rest: splitting the official score as in 1.3, into the part that follows SPY's past 20-day move and the rest, gives an AUC of 0.497 for the 20-day part and 0.407 for the rest. The rest is the low part.
-- Detrending: the SPY-only forecast scores 0.459 as shipped and 0.496 with detrending off. 1.3 found that in 2025 the detrending step, which draws a straight line through the past year and continues it, pulled the forecast down during the recovery; this agrees with it.
-- The fixed logistic regression scored 0.524 at h=5.
-- h=1: AUC against the real label 0.512, against close-to-close 0.492, against the overnight gap 0.426; correlation of the h=1 score with SPY's past 1-day move +0.02 and past 5-day move -0.31.
-
-*Not found:*
-
-- What the rest reacts to in the part of 2025 that is not the detrending line. 1.3 did not find it, and it is not known.
-- Anything unusual at h=1: the AUC is 0.512 and its interval contains 0.5.
+- Two studies (1, 2) test direction directly. Both find zero-shot TimesFM no better than a simple baseline: below "always up" in study 1, and just under 50% in study 2.
+- A third (3) finds no clear win over a random walk.
+- The papers that report a good TimesFM (4, 5, 6) fine-tuned it first, or predicted volatility or risk instead of direction.
+- Tiny example: if 70% of days in the data were up, "always say up" scores 70%. A model must beat that number, not 50%.
+
+**How our result compares.** Our result fits this pattern. TimesFM-3 got AUC 0.482 (h=1) and 0.459 (h=5), slightly under 0.5. The setups differ. Paper 1 used accuracy against an always-up rule, not AUC, and used single stocks in a list of current members. Paper 2 used single firms, and paper 3 used error on returns. Papers 4–6 predicted risk, not direction. None of them tested TimesFM-3 or SPY direction itself, so they support our direction of result but are not a direct check. We found no paper that reports TimesFM predicting stock direction well.
+
+**References**
+
+1. T. Cheung. "When Directional Accuracy Lies: A Base-Rate-Honest Benchmark for LoRA-Adapted TimesFM on Equity Forecasting." arXiv:2607.12248, 2026. https://arxiv.org/abs/2607.12248
+2. E. Rahimikia, H. Ni, W. Wang. "Re(Visiting) Time Series Foundation Models in Finance." arXiv:2511.18578, 2025. https://arxiv.org/abs/2511.18578
+3. M. Noguer i Alonso, R. P. Franklin. "Pretrained Time-Series Foundation Models for Financial Return Forecasting." arXiv:2606.27100, 2026. https://arxiv.org/abs/2606.27100
+4. A. Goel, P. Pasricha, J. Kanniainen. "Time-Series Foundation Model for Value-at-Risk." arXiv:2410.11773, 2024. https://arxiv.org/abs/2410.11773
+5. X. Fu, M. Hirano, K. Imajo. "Financial Fine-tuning a Large Time Series Model." arXiv:2412.09880, 2024. https://arxiv.org/abs/2412.09880
+6. A. Goel, P. Pasricha, M. Magris, J. Kanniainen. "Foundation Time-Series AI Model for Realized Volatility Forecasting." arXiv:2505.11163, 2025. https://arxiv.org/abs/2505.11163
+
+All six are arXiv preprints; none is confirmed peer-reviewed.
