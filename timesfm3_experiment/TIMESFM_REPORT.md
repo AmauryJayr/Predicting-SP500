@@ -47,6 +47,12 @@ Google's TimesFM-3 is a pretrained forecasting model. Used "as is", without any 
 
 Every TimesFM number in this report comes from the same official setup: `multi` with 256 days of history, chosen on 2013–2018 only (sections 3–5 have the full details). One forecast is made each trading day, like this:
 
+```
+past year of prices → TimesFM → 9 possible prices for 5 days later → where today's price sits among them → chance of "up" → compare with 58% (h=5) → "up" or "not up"
+```
+
+Step by step:
+
 | step | what happens | details |
 |---|---|---|
 | 1. Input | TimesFM gets the history up to today's close (day *t*), and nothing later. | SPY's log close over the last 256 trading days (about one year), plus the log close of 15 other series over the same days: QQQ, IWM, the 9 sector ETFs, TLT, IEF, GLD and VIX. The 15 are only extra context ("past-only covariates"); TimesFM does not forecast them. |
@@ -57,6 +63,39 @@ Every TimesFM number in this report comes from the same official setup: `multi` 
 | 6. Next day | The 256-day window moves forward by one day, and everything repeats. | Nothing is ever trained on our data (zero-shot). |
 
 **In plain words:** TimesFM looks at the last year of SPY and 15 related markets and draws a fan of possible prices for the next 5 days. The share of the fan above today's price is its P(up). Our labels are used for one thing only: the fixed shift in step 4.
+
+*Simple example (made-up numbers).* TimesFM does not just give one number, such as "next week SPY will be at 605". For each future day it gives a range: where the price will probably land, and how likely each part of that range is.
+
+Suppose SPY closes at 600 today (*t*). After reading the past 256 days, the model returns the table below in one pass: 5 rows for the next 5 days, and 9 columns for the 9 quantiles. To keep it easy to read, the table shows prices; the model actually works with log prices.
+
+| day ahead | 10% | 20% | 30% | 40% | 50% | 60% | 70% | 80% | 90% |
+|---|---|---|---|---|---|---|---|---|---|
+| t+1 (step 1) | 594 | 596 | 598 | 599 | 600.5 | 601.5 | 603 | 604 | 606 |
+| t+2 | … | | | | | | | | |
+| t+3 | … | | | | | | | | |
+| t+4 | … | | | | | | | | |
+| t+5 (step 5) | 585 | 590 | 594 | 597 | 601 | 604 | 607 | 611 | 616 |
+
+**How to read a quantile.** Take the t+5 row:
+
+- "10%: 585" means the model thinks there is a 10% chance that the close 5 days from now is below 585.
+- "50%: 601" is the middle guess: a 50% chance it is below 601, and a 50% chance it is above.
+- "90%: 616" means a 90% chance it is below 616.
+
+**Why the range gets wider further ahead.** The t+1 row runs from 594 to 606, a narrow range. The t+5 row runs from 585 to 616, which is much wider, because the further future is less certain. The fan picture in section 5 of `timesfm3_experiment/timesfm_eli5.md` shows the same thing.
+
+*Continuing the simple example: from the range to a call.*
+
+- **Where today's price sits (step 3).** Today's 600 lies between the 40% line (597) and the 50% line (601), about 3/4 of the way up. So the model gives about a 47.5% chance that the close 5 days later is lower, and P(up) ≈ **52.5%**. This is not a count of how many of the 9 prices are above 600 (that would be 5/9 = 55.6%). A small change in today's price moves P(up) only a little:
+
+  | today's close | where it sits | P(up) |
+  |---|---|---|
+  | 599 | halfway between 597 and 601 | 55% |
+  | 600 | 3/4 of the way | 52.5% |
+  | 601 | exactly on the 50% line | 50% |
+
+- **The call (step 5).** 52.5% is below the threshold of 58.1%, so this counts as TimesFM saying "not up". Step 4, the small shift, barely changes the number at h=5, so it is skipped here.
+- **Checking the answer.** Five days later, compare the close with the next day's open (the label). If the call matches, TimesFM was right.
 
 *Tiny example: 2019-05-13, a day in the 2019 fall.*
 
