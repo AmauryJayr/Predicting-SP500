@@ -1,0 +1,64 @@
+{
+  "5": {
+    "M1": {
+      "cut": 0.9,
+      "window": 504
+    },
+    "M2": {
+      "split": "median",
+      "lookback": 504
+    },
+    "_validation": {
+      "M1_mean_auc": {
+        "{\"cut\": 0.8, \"window\": 504}": 0.4961,
+        "{\"cut\": 0.8, \"window\": null}": 0.4231,
+        "{\"cut\": 0.9, \"window\": 504}": 0.5022,
+        "{\"cut\": 0.9, \"window\": null}": 0.4273
+      },
+      "M2_mean_auc": {
+        "{\"split\": \"median\", \"lookback\": 504}": 0.486,
+        "{\"split\": \"median\", \"lookback\": null}": 0.4071,
+        "{\"split\": \"tercile\", \"lookback\": 504}": 0.4588,
+        "{\"split\": \"tercile\", \"lookback\": null}": 0.41
+      }
+    }
+  },
+  "1": {
+    "M1": {
+      "cut": 0.9,
+      "window": 504
+    },
+    "M2": {
+      "split": "tercile",
+      "lookback": 504
+    },
+    "_validation": {
+      "M1_mean_auc": {
+        "{\"cut\": 0.8, \"window\": 504}": 0.4874,
+        "{\"cut\": 0.8, \"window\": null}": 0.4714,
+        "{\"cut\": 0.9, \"window\": 504}": 0.4968,
+        "{\"cut\": 0.9, \"window\": null}": 0.4705
+      },
+      "M2_mean_auc": {
+        "{\"split\": \"median\", \"lookback\": 504}": 0.4495,
+        "{\"split\": \"median\", \"lookback\": null}": 0.4503,
+        "{\"split\": \"tercile\", \"lookback\": 504}": 0.4788,
+        "{\"split\": \"tercile\", \"lookback\": null}": 0.4582
+      }
+    }
+  },
+  "M3": {
+    "signal": "rv20",
+    "cap": 2.0,
+    "vix_variant": {
+      "signal": "vix",
+      "cap": 1.5
+    },
+    "_validation_mean_sharpe": {
+      "{\"signal\": \"rv20\", \"cap\": 1.5}": 0.981,
+      "{\"signal\": \"rv20\", \"cap\": 2.0}": 0.989,
+      "{\"signal\": \"vix\", \"cap\": 1.5}": 0.904,
+      "{\"signal\": \"vix\", \"cap\": 2.0}": 0.859
+    }
+  }
+}

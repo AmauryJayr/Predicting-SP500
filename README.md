@@ -72,3 +72,17 @@ Full write-ups:
   - the news-based Economic Policy Uncertainty index.
 
   They raise AUC by about +0.01 in most comparisons, with no significant gain. Scripts: `experiments/fred_*.py`; data: `data/fred/`.
+- **ARMAX + GARCH baseline (Part F):** an industry-standard econometric baseline, improved one step at a time:
+  1. empirical calibration (returns are skewed);
+  2. intraday/overnight target alignment;
+  3. GARCH-t volatility;
+  4. inputs chosen on validation;
+  5. drift-aware re-estimation.
+
+  It ends up well calibrated (significantly better Brier score than the 1-day logistic regression) but still without significant direction skill. Scripts: `experiments/armax_lib.py`, `experiments/armax_study.py`.
+- **VIX as a drift / regime indicator:** three pre-registered uses of the VIX:
+  1. label-free retraining triggered when the VIX regime flips;
+  2. picking, in each VIX regime, the model that did best in that regime before;
+  3. volatility-managed exposure (Moreira & Muir 2017).
+
+  The first two do not beat the model trained once at either horizon. The managed strategy has a higher Sharpe ratio than buy-and-hold (1.10 vs 0.95, smaller drawdown), but the difference is not significant. Scripts: `experiments/vix_lib.py`, `experiments/vix_study.py`; locked choices in `experiments/vix_preregistration.md`.

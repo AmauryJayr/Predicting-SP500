@@ -1,0 +1,29 @@
+{
+  "5": {
+    "M1_fires": 20,
+    "M2_chosen": {
+      "always_up": 835,
+      "lr_all": 825,
+      "lr_core": 78,
+      "gbdt_core": 17
+    },
+    "M2_blind_chosen": {
+      "lr_all": 892,
+      "always_up": 794,
+      "lr_core": 69
+    }
+  },
+  "1": {
+    "M1_fires": 20,
+    "M2_chosen": {
+      "always_up": 924,
+      "gbdt_core": 317,
+      "lr_all": 268,
+      "lr_core": 250
+    },
+    "M2_blind_chosen": {
+      "always_up": 1546,
+      "lr_core": 213
+    }
+  }
+}
