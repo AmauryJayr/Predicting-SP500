@@ -1,0 +1,228 @@
+"""Build timesfm3_slides.pptx (python-pptx; plain text boxes, shapes and PNGs only). Run build_figs.py first."""
+import pandas as pd
+from pathlib import Path
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.oxml.ns import qn
+from lxml import etree
+
+HERE = Path(__file__).resolve().parent
+FIG = HERE / "fig"
+INK, MUTE, BLUE = RGBColor(0x1F, 0x1F, 0x1E), RGBColor(0x52, 0x51, 0x4E), RGBColor(0x2A, 0x78, 0xD6)
+CARD = RGBColor(0xF3, 0xF4, 0xF6)
+FONT = "Arial"
+
+prs = Presentation()
+prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
+BLANK = prs.slide_layouts[6]
+
+def rgb(h): return RGBColor.from_string(h)
+
+def text(slide, x, y, w, h, paras, size=16, color=INK, bold=False, align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP,
+         space_after=0, bullets=False, name=None):
+    """paras: list of paragraphs; each is a str or a list of (text, {bold,color,size,italic}) runs."""
+    tb = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
+    if name: tb.name = name
+    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = anchor
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    for i, p_ in enumerate(paras):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = align
+        if space_after: p.space_after = Pt(space_after)
+        runs = [(p_, {})] if isinstance(p_, str) else p_
+        for t, o in runs:
+            r = p.add_run(); r.text = t
+            f = r.font; f.name = FONT; f.size = Pt(o.get("size", size)); f.bold = o.get("bold", bold)
+            f.italic = o.get("italic", False); f.color.rgb = o.get("color", color)
+        if bullets:
+            pPr = p._p.get_or_add_pPr(); pPr.set("marL", str(Inches(0.28))); pPr.set("indent", str(-Inches(0.28)))
+            bc = etree.SubElement(pPr, qn("a:buClr")); sc = etree.SubElement(bc, qn("a:srgbClr")); sc.set("val", "2A78D6")
+            bu = etree.SubElement(pPr, qn("a:buChar")); bu.set("char", "•")
+    return tb
+
+def shape(slide, kind, x, y, w, h, fill, line=None, radius=None, name=None):
+    s = slide.shapes.add_shape(kind, Inches(x), Inches(y), Inches(w), Inches(h))
+    if name: s.name = name
+    s.fill.solid(); s.fill.fore_color.rgb = fill
+    if line is None: s.line.fill.background()
+    else: s.line.color.rgb = line; s.line.width = Pt(1)
+    st = s._element.find(qn('p:style'))
+    if st is not None: s._element.remove(st)
+    if radius is not None and kind == MSO_SHAPE.ROUNDED_RECTANGLE: s.adjustments[0] = radius
+    return s
+
+def shape_text(s, t, size, color=INK, bold=False, align=PP_ALIGN.CENTER):
+    tf = s.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = Inches(0.08); tf.margin_top = tf.margin_bottom = Inches(0.03)
+    p = tf.paragraphs[0]; p.alignment = align
+    r = p.add_run(); r.text = t; r.font.name = FONT; r.font.size = Pt(size); r.font.bold = bold; r.font.color.rgb = color
+
+def pic(slide, path, x, y, w, alt):
+    p = slide.shapes.add_picture(str(path), Inches(x), Inches(y), width=Inches(w))
+    p._element.nvPicPr.cNvPr.set("descr", alt)
+    return p
+
+n_slides = 0
+def new_slide(title, notes, title_size=32):
+    global n_slides
+    n_slides += 1
+    s = prs.slides.add_slide(BLANK)
+    if title:
+        text(s, 0.5, 0.35, 12.3, 0.7, [title], size=title_size, bold=True, name="Title")
+    text(s, 12.2, 7.0, 0.65, 0.3, [str(n_slides)], size=12, color=MUTE, align=PP_ALIGN.RIGHT, name="Slide number")
+    s.notes_slide.notes_text_frame.text = notes
+    return s
+
+# ---------------------------------------------------------------- 1 title
+s = new_slide(None, "[~5 s] My part is TimesFM-3, a pretrained forecaster from Google. The question: can it call SPY's direction with no training on our data?")
+text(s, 0.8, 2.35, 6.2, 1.0, ["TimesFM-3 on SPY"], size=44, bold=True, name="Title")
+text(s, 0.8, 3.55, 5.9, 1.4, ["Can a pretrained forecaster call the market's direction?", "Zero-shot test, 2019\u20132025"], size=22, space_after=8, color=MUTE, name="Subtitle")
+pic(s, FIG / "title_spy.png", 7.2, 2.2, 5.5, "SPY close 2019 to 2025 with the three big falls shaded violet")
+text(s, 7.2, 5.45, 5.5, 0.3, ["SPY, 2019–2025; violet = the three big falls (2020, 2022, 2025)"], size=12, color=MUTE)
+
+# ---------------------------------------------------------------- 2 how it works
+s = new_slide("How TimesFM-3 works",
+ "[~35 s] TimesFM-3 is a transformer with 331 million parameters, pretrained by Google on over a trillion points of time-series data. "
+ "We use it zero-shot: no training on our data. Each day we give it the last 256 trading days of SPY plus 15 related markets. "
+ "For each of the next 5 days it returns nine quantiles, like this table with made-up numbers. "
+ "Take the day-5 row: there is a 10% chance the close is below 585, a 50% chance below 601, and a 90% chance below 616. "
+ "Today's close, 600, sits between the 40% and 50% values, three quarters of the way up. "
+ "So the chance of ending lower is about 47.5%, and P(up) is about 52.5%. That is below our threshold of 58%, so the call is 'not up'.")
+text(s, 0.5, 1.45, 5.2, 4.2, [
+    "Google's pretrained time-series model (TimesFM 3.0, Aug 2026): a transformer with 331M parameters",
+    "Pretrained on over 1 trillion time points; we use it zero-shot (no training on our data)",
+    "Input: last 256 trading days of SPY + 15 related series (QQQ, IWM, 9 sector ETFs, TLT, IEF, GLD, VIX)",
+    "Output: for each of the next 5 days, 9 quantiles (10%…90%) of the price"],
+    size=18, space_after=14, bullets=True, name="Bullets")
+
+# quantile table: the made-up example of the report ("How TimesFM-3 makes a forecast")
+def cell_border(cell, color="D0D0D0", w=12700):
+    tcPr = cell._tc.get_or_add_tcPr()  # borders must precede the fill in tcPr, so call this before cell.fill
+    for tag in ("a:lnL", "a:lnR", "a:lnT", "a:lnB"):
+        ln = etree.SubElement(tcPr, qn(tag)); ln.set("w", str(w))
+        sf = etree.SubElement(ln, qn("a:solidFill")); c_ = etree.SubElement(sf, qn("a:srgbClr")); c_.set("val", color)
+
+text(s, 6.0, 1.4, 6.85, 0.35, [[("Example (made-up numbers): ", {"bold": True}), ("today's close = 600", {})]], size=16, name="Table caption")
+q_hdr = ["day"] + [f"{q}%" for q in range(10, 100, 10)]
+q_rows = [["t+1", "594", "596", "598", "599", "600.5", "601.5", "603", "604", "606"],
+          ["t+2…t+4"] + ["…"] * 9,
+          ["t+5", "585", "590", "594", "597", "601", "604", "607", "611", "616"]]
+gf = s.shapes.add_table(4, 10, Inches(6.0), Inches(1.85), Inches(6.85), Inches(1.72))
+gf.name = "Quantile table"
+tbl = gf.table
+tbl.first_row = True; tbl.horz_banding = False
+tbl.columns[0].width = Inches(1.09)
+for j in range(1, 10): tbl.columns[j].width = Inches(0.64)
+HI = rgb("FBE3A6")
+for i, vals in enumerate([q_hdr] + q_rows):
+    tbl.rows[i].height = Inches(0.43)
+    for j, v in enumerate(vals):
+        c = tbl.cell(i, j)
+        hi = (i == 3 and j in (4, 5))  # t+5 row, 40% and 50%: today's 600 lies between them
+        cell_border(c)
+        c.fill.solid(); c.fill.fore_color.rgb = HI if hi else (CARD if i == 0 or j == 0 else RGBColor(255, 255, 255))
+        c.margin_left = c.margin_right = Inches(0.03); c.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = c.text_frame.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
+        r = p.add_run(); r.text = v
+        f = r.font; f.name = FONT; f.size = Pt(15); f.bold = (i == 0 or j == 0 or hi); f.color.rgb = INK
+text(s, 6.0, 3.75, 6.85, 2.05, [
+    [("Read the t+5 row: ", {"bold": True}), ("a 10% chance the close is below 585, 50% below 601, 90% below 616.", {})],
+    [("Today's 600 ", {"bold": True}), ("sits between 597 (40%) and 601 (50%), ¾ of the way up → about 47.5% chance of ending lower.", {})],
+    [("P(up) ≈ 52.5%", {"bold": True, "color": BLUE}), (" < 58% threshold → “not up”.", {})]],
+    size=16, space_after=10, name="Table reading")
+steps = ["past 256 days", "TimesFM-3", "9 quantiles", "P(up)", "≥ threshold?", "“up” / “not up”"]
+bw, gap, x0, y0 = 1.78, 0.33, 0.5, 5.95
+for i, t in enumerate(steps):
+    x = x0 + i * (bw + gap)
+    last = i == len(steps) - 1
+    b = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, y0, bw, 0.7, BLUE if i == 1 else CARD, radius=0.2, name=f"Flow {i+1}")
+    shape_text(b, t, 15, color=RGBColor(255, 255, 255) if i == 1 else INK, bold=(i == 1))
+    if not last:
+        text(s, x + bw, y0, gap, 0.7, ["→"], size=18, color=MUTE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+# ---------------------------------------------------------------- 3 result
+s = new_slide("Result: slightly worse than a coin flip",
+ "[~20 s] We chose the setup on 2013–2018 only, locked it, and ran the 2019–2025 test once. TimesFM scored AUC 0.48 for tomorrow and 0.46 for the next 5 days. "
+ "0.5 is a coin flip, so it is slightly worse than a coin flip, and at 5 days it is clearly worse than our logistic regression. "
+ "On the right: most of the damage comes from three years, 2020, 2022 and 2025, the years with a big fall. Let's go year by year.")
+text(s, 0.5, 1.3, 6.0, 0.35, ["AUC by horizon"], size=18, bold=True)
+text(s, 6.85, 1.3, 6.0, 0.35, ["5-day AUC per test year"], size=18, bold=True)
+pic(s, FIG / "auc_horizon.png", 0.5, 1.75, 6.0, "Bar chart: AUC for TimesFM-3 and logistic regression at h=1 and h=5")
+pic(s, FIG / "auc_by_year.png", 6.85, 1.75, 6.0, "Bar chart: h=5 AUC per test year, 2020, 2022 and 2025 highlighted")
+text(s, 0.5, 6.1, 12.3, 0.35, ["Setup chosen on 2013–2018 only, pre-registered, test run once (1,755–1,759 days)"], size=18, color=INK, name="Caption")
+text(s, 0.5, 6.62, 11.0, 0.3, ["AUC 0.5 = coin flip, 1.0 = always right"], size=12, color=MUTE, name="Footnote")
+
+# ---------------------------------------------------------------- 4-10 years
+det = pd.read_csv(HERE.parent / "results" / "timesfm_year_detail.csv"); det = det[det.year != "all"]; det["year"] = det.year.astype(int)
+def row(y, h): return det[(det.year == y) & (det.horizon == h)].iloc[0]
+RED, AMBER, GREY = (rgb("FBE3E1"), rgb("B42318")), (rgb("FDEBC8"), rgb("8A5A00")), (rgb("EDEDEB"), rgb("3F3F3D"))
+AMBER_SET = {(2025, 5)}
+red_found = {(y, h) for y in range(2019, 2026) for h in (1, 5) if row(y, h).auc_ci_hi < 0.5}
+assert red_found == {(2020, 5), (2022, 5), (2024, 1)}, red_found
+
+Q = "“"; Qe = "”"
+YEARS = [
+ (2019, "A calm climb", "[~12 s] 2019 was a calm climb, plus 31 percent. TimesFM said up on only 40 percent of days. Its AUC is 0.49, a coin flip. In a calm year there is just nothing for it to find.",
+  "+31%, one small dip (−7% in May).",
+  f"Said {Q}up{Qe} on only 40% of days, while 68% of 5-day windows went up.",
+  "Nothing real to find in a calm year; the 95% interval (0.34–0.64) includes 0.5, so this is a coin flip."),
+ (2020, "Covid crash and rebound", "[~15 s] 2020, the Covid crash. TimesFM has a habit: after a fall it expects a bounce. So it said up every day of the crash, which was wrong, and kept saying up in the rebound, which was right. Those cancel out. The loss comes from the rest of the forecast, which scores 0.36. What that part reacts to, we could not find.",
+  "−34% in Feb–Mar, back at the high in August.",
+  f"Said {Q}up{Qe} every day of the crash (right on 30%). In the rebound: {Q}up{Qe} on 62% of days but the wrong ones (right on 45%; always {Q}up{Qe} gets 71%).",
+  "Its habit, expecting a bounce after a fall, is not the cause (that part alone scores 0.54). The rest of the forecast scores 0.36; what it reacts to was not found."),
+ (2021, "A smooth climb", "[~10 s] 2021, a smooth climb; the biggest dip was only 5 percent. TimesFM said up on 90 percent of days, almost always up. AUC 0.48, again a coin flip.",
+  "+29%, biggest dip only −5%.",
+  f"Said {Q}up{Qe} on 90% of days, almost {Q}always up{Qe}.",
+  "Little to rank; the interval includes 0.5, a coin flip."),
+ (2022, "Rate hikes: three falls, three bounces", "[~15 s] 2022, rate hikes: three falls with sharp bounces in between. In the bounces the market went up in 71 percent of the windows, but TimesFM said up on only 4 percent of those days. It was more positive in the falls than in the bounces. AUC 0.39. Again not the bounce habit; why the rest of the forecast did this, we don't know.",
+  "−18% for the year (−25% from the high), falling in 3 steps with sharp bounces.",
+  f"In the 3 bounces the market rose in 71% of windows, but TimesFM said {Q}up{Qe} on only 4% of those days; its P(up) was higher in the falls (0.61) than in the bounces (0.46).",
+  "Not the bounce habit (that part scores 0.51); the rest of the forecast (0.37) pushed it down in the bounces; cause not found."),
+ (2023, "A calm climb with a 10% dip", "[~10 s] 2023, a calm climb with a 10 percent dip. TimesFM was too cautious, saying up on only 29 percent of days, but its ranking is a coin flip: AUC 0.51.",
+  "+26%, led by AI and big tech; −10% from August to October.",
+  f"Said {Q}up{Qe} on only 29% of days while 62% of windows went up.",
+  "Too cautious in its calls, but its ranking is a coin flip (interval 0.33–0.69)."),
+ (2024, "The odd year for tomorrow", "[~12 s] 2024 is the odd one. The 5-day forecast is a coin flip, but for tomorrow it is the worst year, AUC 0.42. We checked the overnight gap, the label and recent moves; none explains it. It might be luck, since we looked at 14 year-and-horizon results.",
+  "+25%, one sharp drop (−8%) in July–August.",
+  "The 5-day forecast is a coin flip, but for tomorrow (h=1) this is the worst year; its whole interval (0.34–0.46) is below 0.5.",
+  "Not explained. Not the overnight gap, not the label, not the past 1- or 5-day move. Could be luck across 14 year × horizon checks (not tested)."),
+ (2025, "Tariff shock and recovery", "[~15 s] 2025, the tariff shock. TimesFM said up all through the fall, then in the recovery it said up on only 14 percent of days, while the market rose in 76 percent of windows. Here we found part of the reason: a built-in step draws a straight line through the past year and continues it. After the fall, that line pointed down and dragged the forecast down.",
+  "−19% from February to April, back at the high in late June.",
+  f"Said {Q}up{Qe} all through the fall (right on 38%). In the recovery the market rose in 76% of windows, but TimesFM said {Q}up{Qe} on only 14% of days.",
+  "Partly checked: a built-in step draws a straight line through the past year and continues it; after the fall it pointed down and pulled the forecast down. Removing it lifts that part's AUC from 0.39 to 0.47. The rest: not found."),
+]
+for yr, sub, notes, spy_t, tf_t, why_t in YEARS:
+    s = new_slide(f"{yr} · {sub}", notes)
+    x = 0.5
+    for h in (5, 1):
+        r = row(yr, h)
+        fill, fg = RED if (yr, h) in red_found else AMBER if (yr, h) in AMBER_SET else GREY
+        b = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.12, 2.35, 0.46, fill, radius=0.3, name=f"Badge h={h}")
+        shape_text(b, f"h={h} AUC {r.auc:.2f}", 18, color=fg, bold=True)
+        x += 2.55
+    pic(s, FIG / f"year_{yr}.png", 0.4, 1.8, 8.2, f"{yr}: SPY close with fall and recovery phases, TimesFM up calls and market up days")
+    lab = lambda t: [(t, {"bold": True, "color": BLUE, "size": 15})]
+    text(s, 8.95, 1.85, 3.95, 5.0, [lab("SPY"), spy_t, lab("TimesFM"), tf_t, lab("Why"), why_t], size=15, space_after=3, name="Explanation")
+    # extra gap before labels: set space_before on label paragraphs
+    for p in s.shapes[-1].text_frame.paragraphs:
+        if p.runs and p.runs[0].font.bold and p.runs[0].text in ("TimesFM", "Why"): p.space_before = Pt(9)
+    text(s, 0.5, 6.97, 11.2, 0.3, ["red = whole 95% interval below 0.5; 5-day windows; year analysis is exploratory (after the test)"], size=11, color=MUTE, name="Footnote")
+
+# ---------------------------------------------------------------- 11 bottom line
+s = new_slide("Bottom line",
+ "[~10 s] So: zero-shot TimesFM-3 can't call SPY's direction. In calm years it's a coin flip; in the fall years it leans the wrong way in the rebound. We explained part of 2025; 2020, 2022 and 2024 are still open. Thank you.")
+items = ["Zero-shot TimesFM-3 cannot call SPY's direction: AUC 0.48 (h=1) and 0.46 (h=5), below our logistic regression.",
+         "Calm years: a coin flip. Fall years (2020, 2022, 2025): it leans the wrong way in the rebound.",
+         "Partly explained for 2025 (the detrending line); 2020, 2022 and 2024 (h=1) remain open."]
+for i, t in enumerate(items):
+    y = 1.6 + i * 1.7
+    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, 0.5, y, 12.3, 1.4, CARD, radius=0.12, name=f"Card {i+1}")
+    c = shape(s, MSO_SHAPE.OVAL, 0.85, y + 0.37, 0.66, 0.66, BLUE, name=f"Number {i+1}")
+    shape_text(c, str(i + 1), 22, color=RGBColor(255, 255, 255), bold=True)
+    text(s, 1.85, y + 0.1, 10.6, 1.2, [t], size=22, anchor=MSO_ANCHOR.MIDDLE, name=f"Bullet {i+1}")
+
+prs.save(HERE / "timesfm3_slides.pptx")
+print("saved", n_slides, "slides")
