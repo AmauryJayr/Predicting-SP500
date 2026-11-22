@@ -1,0 +1,66 @@
+{
+  "1": {
+    "M1": {
+      "cut": 0.8,
+      "min_ctx": 126
+    },
+    "M2": {
+      "lookback": null,
+      "split": "tercile"
+    },
+    "_validation": {
+      "M1_mean_auc": {
+        "{\"cut\": 0.8, \"min_ctx\": 126}": 0.483,
+        "{\"cut\": 0.8, \"min_ctx\": 63}": 0.471,
+        "{\"cut\": 0.9, \"min_ctx\": 126}": 0.4729,
+        "{\"cut\": 0.9, \"min_ctx\": 63}": 0.4674
+      },
+      "M2_mean_auc": {
+        "{\"split\": \"median\", \"lookback\": 504}": 0.4656,
+        "{\"split\": \"median\", \"lookback\": null}": 0.4675,
+        "{\"split\": \"tercile\", \"lookback\": 504}": 0.4669,
+        "{\"split\": \"tercile\", \"lookback\": null}": 0.4703
+      },
+      "fixed_chronos_mean_auc": 0.4913
+    }
+  },
+  "5": {
+    "M1": {
+      "cut": 0.9,
+      "min_ctx": 126
+    },
+    "M2": {
+      "lookback": 504,
+      "split": "median"
+    },
+    "_validation": {
+      "M1_mean_auc": {
+        "{\"cut\": 0.8, \"min_ctx\": 126}": 0.4884,
+        "{\"cut\": 0.8, \"min_ctx\": 63}": 0.4748,
+        "{\"cut\": 0.9, \"min_ctx\": 126}": 0.4893,
+        "{\"cut\": 0.9, \"min_ctx\": 63}": 0.4798
+      },
+      "M2_mean_auc": {
+        "{\"split\": \"median\", \"lookback\": 504}": 0.4334,
+        "{\"split\": \"median\", \"lookback\": null}": 0.3888,
+        "{\"split\": \"tercile\", \"lookback\": 504}": 0.426,
+        "{\"split\": \"tercile\", \"lookback\": null}": 0.3995
+      },
+      "fixed_chronos_mean_auc": 0.4906
+    }
+  },
+  "M3": {
+    "_master_rv20_cap2_mean_sharpe": 0.989,
+    "_validation_mean_sharpe": {
+      "{\"signal\": \"chronos\", \"cap\": 1.5}": 0.941,
+      "{\"signal\": \"chronos\", \"cap\": 2.0}": 0.875
+    },
+    "cap": 1.5,
+    "signal": "chronos"
+  },
+  "_frozen_inputs": {
+    "chronos_experiment/results/chronos_shortlist.json": "336ce5edcd939de5cd9a46b0b1c5d63efcad0642b9dd8247a02709a2e3997b6e",
+    "chronos_experiment/results_ext/ext_shortlist.json": "e6f21fb30662b8bb83dad06b8876d3aabfd4adc412d44547173a2977f318de83",
+    "experiments/vix_lib.py": "23bf30c964c0780cc9d6218d141ba3dbda3f0bae2602186c83ddc7715954eb9b"
+  }
+}
