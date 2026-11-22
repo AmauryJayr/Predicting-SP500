@@ -1,0 +1,44 @@
+{
+  "5": {
+    "M1": {
+      "n_fires": 20,
+      "mean_ctx": 201.45242165242166,
+      "share_shortened": 0.6085470085470085
+    },
+    "scheduled": {
+      "n_fires": 27,
+      "mean_ctx": 160.41538461538462,
+      "share_shortened": 0.9641025641025641
+    },
+    "M2_chosen": {
+      "always_up": 1437,
+      "uni_2048": 204,
+      "joint_512": 95,
+      "uni_256": 15,
+      "core_256": 4
+    },
+    "M2_blind_chosen": {
+      "always_up": 1712,
+      "uni_2048": 43
+    }
+  },
+  "1": {
+    "M1": {
+      "n_fires": 27,
+      "mean_ctx": 214.0056850483229,
+      "share_shortened": 0.9471290505969301
+    },
+    "scheduled": {
+      "n_fires": 27,
+      "mean_ctx": 169.6321773735077,
+      "share_shortened": 0.9641841955656623
+    },
+    "M2_chosen": {
+      "always_up": 1443,
+      "joint_512": 316
+    },
+    "M2_blind_chosen": {
+      "always_up": 1759
+    }
+  }
+}
