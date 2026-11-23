@@ -142,12 +142,13 @@ text(s, 0.5, 7.0, 9.0, 0.3, ["Source: model card google/timesfm-3.0-pytorch (dat
 
 # ---------------------------------------------------------------- 3 how it works
 s = new_slide("How TimesFM-3 works",
- "[~35 s] TimesFM-3 is a transformer with 331 million parameters, pretrained by Google on over a trillion points of time-series data. "
+ "[~40 s] TimesFM-3 is a transformer with 331 million parameters, pretrained by Google on over a trillion points of time-series data. "
  "We use it zero-shot: no training on our data. Each day we give it the last 256 trading days of SPY plus 15 related markets. "
  "For each of the next 5 days it returns nine quantiles, like this table with made-up numbers. "
  "Take the day-5 row: there is a 10% chance the close is below 585, a 50% chance below 601, and a 90% chance below 616. "
  "Today's close, 600, sits between the 40% and 50% values, three quarters of the way up. "
- "So the chance of ending lower is about 47.5%, and P(up) is about 52.5%. That is below our threshold of 58%, so the call is 'not up'.")
+ "So the chance of ending lower is about 47.5%, and P(up) is about 52.5%. "
+ "Our results add the team's drift layer here, before the threshold: stacking for tomorrow, recalibration for 5 days, chosen on 2015 to 2018. Raw, 52.5% is below 58%, so 'not up'.")
 text(s, 0.5, 1.45, 5.2, 4.2, [
     "Google's pretrained time-series model (TimesFM 3.0, Aug 2026): a transformer with 331M parameters",
     "Pretrained on over 1 trillion time points; we use it zero-shot (no training on our data)",
@@ -188,89 +189,99 @@ for i, vals in enumerate([q_hdr] + q_rows):
 text(s, 6.0, 3.75, 6.85, 2.05, [
     [("Read the t+5 row: ", {"bold": True}), ("a 10% chance the close is below 585, 50% below 601, 90% below 616.", {})],
     [("Today's 600 ", {"bold": True}), ("sits between 597 (40%) and 601 (50%), ¾ of the way up → about 47.5% chance of ending lower.", {})],
-    [("P(up) ≈ 52.5%", {"bold": True, "color": BLUE}), (" < 58% threshold → “not up”.", {})]],
+    [("P(up) ≈ 52.5%", {"bold": True, "color": BLUE}), (" < 58% threshold → “not up” (raw, before the drift layer).", {})]],
     size=16, space_after=10, name="Table reading")
-steps = ["past 256 days", "TimesFM-3", "9 quantiles", "P(up)", "≥ threshold?", "“up” / “not up”"]
-bw, gap, x0, y0 = 1.78, 0.33, 0.5, 5.95
+steps = ["past 256 days", "TimesFM-3", "9 quantiles", "P(up)", "drift layer", "≥ threshold?", "“up” / “not up”"]
+bw, gap, x0, y0 = 1.5, 0.27, 0.5, 5.85
 for i, t in enumerate(steps):
     x = x0 + i * (bw + gap)
     last = i == len(steps) - 1
-    b = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, y0, bw, 0.7, BLUE if i == 1 else CARD, radius=0.2, name=f"Flow {i+1}")
-    shape_text(b, t, 15, color=RGBColor(255, 255, 255) if i == 1 else INK, bold=(i == 1))
+    b = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, y0, bw, 0.65, BLUE if i == 1 else rgb("FBE3A6") if i == 4 else CARD, radius=0.2, name=f"Flow {i+1}")
+    shape_text(b, t, 14, color=RGBColor(255, 255, 255) if i == 1 else INK, bold=(i in (1, 4)))
     if not last:
-        text(s, x + bw, y0, gap, 0.7, ["→"], size=18, color=MUTE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+        text(s, x + bw, y0, gap, 0.65, ["→"], size=16, color=MUTE, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+text(s, 0.5, 6.7, 11.5, 0.55, [[("Drift layer: ", {"bold": True}), ("the team's methods on top of TimesFM's P(up): stacking for tomorrow, recalibration for 5 days, picked on 2015–2018. All results after this slide include it.", {})]],
+     size=14, name="Drift layer line")
 
 # ---------------------------------------------------------------- 3 result
-s = new_slide("Result: slightly worse than a coin flip",
- "[~20 s] We chose the setup on 2013–2018 only, locked it, and ran the 2019–2025 test once. TimesFM scored AUC 0.48 for tomorrow and 0.46 for the next 5 days. "
- "0.5 is a coin flip, so it is slightly worse than a coin flip, and at 5 days it is clearly worse than our logistic regression. "
- "On the right: most of the damage comes from three years, 2020, 2022 and 2025, the years with a big fall. Let's go year by year.")
+s = new_slide("Result: tomorrow just above a coin flip, 5 days below",
+ "[~20 s] We locked the setup on 2013 to 2018 and ran the 2019 to 2025 test once. With the drift layer, TimesFM scores AUC 0.52 for tomorrow, just above a coin flip and our regression's 0.51, but not significantly. "
+ "For 5 days it scores 0.48, below a coin flip and clearly below the regression's 0.54. The weak years are the big-fall years: 2020, 2022, 2025. Year by year.")
 text(s, 0.5, 1.3, 6.0, 0.35, ["AUC by horizon"], size=18, bold=True)
 text(s, 6.85, 1.3, 6.0, 0.35, ["5-day AUC per test year"], size=18, bold=True)
-pic(s, FIG / "auc_horizon.png", 0.5, 1.75, 6.0, "Bar chart: AUC for TimesFM-3 and logistic regression at h=1 and h=5")
-pic(s, FIG / "auc_by_year.png", 6.85, 1.75, 6.0, "Bar chart: h=5 AUC per test year, 2020, 2022 and 2025 highlighted")
-text(s, 0.5, 6.1, 12.3, 0.35, ["Setup chosen on 2013–2018 only, pre-registered, test run once (1,755–1,759 days)"], size=18, color=INK, name="Caption")
-text(s, 0.5, 6.62, 11.0, 0.3, ["AUC 0.5 = coin flip, 1.0 = always right"], size=12, color=MUTE, name="Footnote")
+pic(s, FIG / "auc_horizon.png", 0.5, 1.75, 6.0, "Bar chart: AUC for TimesFM-3 with the drift layer and logistic regression at h=1 and h=5")
+pic(s, FIG / "auc_by_year.png", 6.85, 1.75, 6.0, "Bar chart: h=5 AUC per test year with the drift layer, 2020, 2022 and 2025 highlighted")
+text(s, 0.5, 6.0, 12.3, 0.35, [[("Drift layer: ", {"bold": True, "color": BLUE}), ("stacking (h=1), recalibration (h=5), picked on 2015–2018. Test run once (1,755–1,759 days).", {})]], size=16, color=INK, name="Caption")
+text(s, 0.5, 6.42, 11.4, 0.8, ["AUC 0.5 = coin flip, 1.0 = always right. Gain over static TimesFM: h=1 +0.043 [−0.003, +0.090], h=5 +0.022 [+0.001, +0.046]; h=1 vs the fixed LR +0.017; "
+                               "none significant after Holm correction. Each family's settings were pre-registered; stacking for h=1 and recalibration for h=5 were picked "
+                               "on 2015–2018 numbers only, but that rule was set after the test had been run."], size=11, color=MUTE, name="Footnote")
 
-# ---------------------------------------------------------------- 4-10 years
-det = pd.read_csv(HERE.parent / "results" / "timesfm_year_detail.csv"); det = det[det.year != "all"]; det["year"] = det.year.astype(int)
+# ---------------------------------------------------------------- 5-11 years (drift-applied TimesFM: h=1 stack-4, h=5 platt-6)
+det = pd.read_csv(HERE.parent / "results" / "timesfm_drift_year_detail.csv"); det = det[det.year != "all"]; det["year"] = det.year.astype(int)
 def row(y, h): return det[(det.year == y) & (det.horizon == h)].iloc[0]
 RED, AMBER, GREY = (rgb("FBE3E1"), rgb("B42318")), (rgb("FDEBC8"), rgb("8A5A00")), (rgb("EDEDEB"), rgb("3F3F3D"))
-AMBER_SET = {(2025, 5)}
 red_found = {(y, h) for y in range(2019, 2026) for h in (1, 5) if row(y, h).auc_ci_hi < 0.5}
-assert red_found == {(2020, 5), (2022, 5), (2024, 1)}, red_found
+amber_found = {(y, h) for y in range(2019, 2026) for h in (1, 5) if row(y, h).auc < 0.45 and (y, h) not in red_found}
+assert red_found == {(2020, 5), (2022, 5)}, red_found
+assert amber_found == {(2025, 5)}, amber_found
 
 Q = "“"; Qe = "”"
+RAW = "Raw TimesFM's causes: see the root-cause slide."
 YEARS = [
- (2019, "A calm climb", "[~12 s] 2019 was a calm climb, plus 31 percent. TimesFM said up on only 40 percent of days. Its AUC is 0.49, a coin flip. In a calm year there is just nothing for it to find.",
+ (2019, "A calm climb", "[~10 s] 2019 was a calm climb, plus 31 percent. TimesFM said up on 38 percent of days. The 5-day AUC is 0.48, a coin flip; tomorrow's 0.57 has an interval that includes 0.5.",
   "+31%, one small dip (−7% in May).",
-  f"Said {Q}up{Qe} on only 40% of days, while 68% of 5-day windows went up.",
-  "Nothing real to find in a calm year; the 95% interval (0.34–0.64) includes 0.5, so this is a coin flip."),
- (2020, "Covid crash and rebound", "[~15 s] 2020, the Covid crash. TimesFM has a habit: after a fall it expects a bounce. So it said up every day of the crash, which was wrong, and kept saying up in the rebound, which was right. Those cancel out. The loss comes from the rest of the forecast, which scores 0.36. What that part reacts to, we could not find.",
+  f"Said {Q}up{Qe} on 38% of days, while 68% of 5-day windows went up.",
+  "Nothing real to find in a calm year; the 95% interval (0.35–0.64) includes 0.5, so this is a coin flip."),
+ (2020, "Covid crash and rebound", "[~12 s] 2020, the Covid crash. TimesFM still said up every day of the crash, which was wrong, and in the rebound up on only 41 percent of days, mostly the wrong ones. AUC 0.36, the whole interval below one half. "
+  "The bounce habit scores 0.54; the rest scores 0.34.",
   "−34% in Feb–Mar, back at the high in August.",
-  f"Said {Q}up{Qe} every day of the crash (right on 30%). In the rebound: {Q}up{Qe} on 62% of days but the wrong ones (right on 45%; always {Q}up{Qe} gets 71%).",
-  "Its habit, expecting a bounce after a fall, is not the cause (that part alone scores 0.54). The rest of the forecast scores 0.36; what it reacts to was not found."),
- (2021, "A smooth climb", "[~10 s] 2021, a smooth climb; the biggest dip was only 5 percent. TimesFM said up on 90 percent of days, almost always up. AUC 0.48, again a coin flip.",
+  f"Said {Q}up{Qe} every day of the crash (right on 30%). In the rebound: {Q}up{Qe} on 41% of days, right on 40%; always {Q}up{Qe} gets 71%.",
+  f"Not the bounce habit: that part alone scores 0.54. The rest of the forecast scores 0.34. {RAW}"),
+ (2021, "A smooth climb", "[~8 s] 2021, a smooth climb; the biggest dip was only 5 percent. With the drift layer TimesFM said up on 68 percent of days instead of 90. AUC 0.49, a coin flip.",
   "+29%, biggest dip only −5%.",
-  f"Said {Q}up{Qe} on 90% of days, almost {Q}always up{Qe}.",
-  "Little to rank; the interval includes 0.5, a coin flip."),
- (2022, "Rate hikes: three falls, three bounces", "[~15 s] 2022, rate hikes: three falls with sharp bounces in between. In the bounces the market went up in 71 percent of the windows, but TimesFM said up on only 4 percent of those days. It was more positive in the falls than in the bounces. AUC 0.39. Again not the bounce habit; why the rest of the forecast did this, we don't know.",
-  "−18% for the year (−25% from the high), falling in 3 steps with sharp bounces.",
-  f"In the 3 bounces the market rose in 71% of windows, but TimesFM said {Q}up{Qe} on only 4% of those days; its P(up) was higher in the falls (0.61) than in the bounces (0.46).",
-  "Not the bounce habit (that part scores 0.51); the rest of the forecast (0.37) pushed it down in the bounces; cause not found."),
- (2023, "A calm climb with a 10% dip", "[~10 s] 2023, a calm climb with a 10 percent dip. TimesFM was too cautious, saying up on only 29 percent of days, but its ranking is a coin flip: AUC 0.51.",
+  f"Said {Q}up{Qe} on 68% of days (raw TimesFM: 90%), while 63% of windows went up.",
+  "Little to rank; the interval (0.36–0.59) includes 0.5, a coin flip."),
+ (2022, "Rate hikes: three falls, three bounces", "[~12 s] 2022, rate hikes: three falls with sharp bounces. In the bounces the market went up in 71 percent of the windows, but TimesFM said up on only 1 percent of those days. AUC 0.38, the whole interval below one half. Again not the bounce habit, but the rest of the forecast.",
+  "−18% for the year (−24% from the high), falling in 3 steps with sharp bounces.",
+  f"In the 3 bounces the market rose in 71% of windows, but TimesFM said {Q}up{Qe} on only 1% of those days; its P(up) was higher in the falls (0.50) than in the bounces (0.33).",
+  f"Not the bounce habit (that part scores 0.51); the rest of the forecast (0.37) pushed it down in the bounces. {RAW}"),
+ (2023, "A calm climb with a 10% dip", "[~8 s] 2023, a calm climb with a 10 percent dip. The drift layer lifts the up calls from 29 to 61 percent of days, but the ranking is a coin flip: AUC 0.47.",
   "+26%, led by AI and big tech; −10% from August to October.",
-  f"Said {Q}up{Qe} on only 29% of days while 62% of windows went up.",
-  "Too cautious in its calls, but its ranking is a coin flip (interval 0.33–0.69)."),
- (2024, "The odd year for tomorrow", "[~12 s] 2024 is the odd one. The 5-day forecast is a coin flip, but for tomorrow it is the worst year, AUC 0.42. We checked the overnight gap, the label and recent moves; none explains it. It might be luck, since we looked at 14 year-and-horizon results.",
+  f"Said {Q}up{Qe} on 61% of days (raw TimesFM: 29%), close to the 62% of windows that went up.",
+  "Its calls now match the market's up rate, but the ranking is still a coin flip (interval 0.30–0.68)."),
+ (2024, "The best year for tomorrow", "[~12 s] 2024 flips. Raw TimesFM had its worst tomorrow-year here, 0.42. With the stacking layer it is the best, 0.60, interval above one half. "
+  "The stack leans on the forecast spread. We did not check why 2024; it is one year of seven, and no gain is significant.",
   "+25%, one sharp drop (−8%) in July–August.",
-  "The 5-day forecast is a coin flip, but for tomorrow (h=1) this is the worst year; its whole interval (0.34–0.46) is below 0.5.",
-  "Not explained. Not the overnight gap, not the label, not the past 1- or 5-day move. Could be luck across 14 year × horizon checks (not tested)."),
- (2025, "Tariff shock and recovery", "[~15 s] 2025, the tariff shock. TimesFM said up all through the fall, then in the recovery it said up on only 14 percent of days, while the market rose in 76 percent of windows. Here we found part of the reason: a built-in step draws a straight line through the past year and continues it. After the fall, that line pointed down and dragged the forecast down.",
+  f"For tomorrow (h=1) this is the best year: AUC 0.60, whole interval (0.56–0.68) above 0.5. Raw TimesFM scored 0.42 here. The 5-day AUC is a coin flip (0.54).",
+  "Not explained. The h=1 stack gets its AUC from the q90−q10 spread, not the up/down score. One year of seven; no gain is significant after correction."),
+ (2025, "Tariff shock and recovery", "[~13 s] 2025, the tariff shock. TimesFM said up on most fall days, then in the recovery on only 7 percent of days, while the market rose in 76 percent of the windows. "
+  "For the raw score we found part of the reason: a built-in step draws a straight line through the past year and continues it. The drift layer does not fix that.",
   "−19% from February to April, back at the high in late June.",
-  f"Said {Q}up{Qe} all through the fall (right on 38%). In the recovery the market rose in 76% of windows, but TimesFM said {Q}up{Qe} on only 14% of days.",
-  "Partly checked: a built-in step draws a straight line through the past year and continues it; after the fall it pointed down and pulled the forecast down. Removing it lifts that part's AUC from 0.39 to 0.47. The rest: not found."),
+  f"Said {Q}up{Qe} on 76% of fall days (right on 56%). In the recovery the market rose in 76% of windows, but TimesFM said {Q}up{Qe} on only 7% of days.",
+  "For raw TimesFM, partly checked: a built-in step draws a straight line through the past year and continues it; after the fall it pointed down and pulled the forecast down (see the root-cause slide). The drift layer does not fix it."),
 ]
 for yr, sub, notes, spy_t, tf_t, why_t in YEARS:
     s = new_slide(f"{yr} · {sub}", notes)
     x = 0.5
     for h in (5, 1):
         r = row(yr, h)
-        fill, fg = RED if (yr, h) in red_found else AMBER if (yr, h) in AMBER_SET else GREY
+        fill, fg = RED if (yr, h) in red_found else AMBER if (yr, h) in amber_found else GREY
         b = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.12, 2.35, 0.46, fill, radius=0.3, name=f"Badge h={h}")
         shape_text(b, f"h={h} AUC {r.auc:.2f}", 18, color=fg, bold=True)
         x += 2.55
-    pic(s, FIG / f"year_{yr}.png", 0.4, 1.8, 8.2, f"{yr}: SPY close with fall and recovery phases, TimesFM up calls and market up days")
+    pic(s, FIG / f"year_{yr}.png", 0.4, 1.8, 8.2, f"{yr}: SPY close with fall and recovery phases, TimesFM + drift layer up calls and market up days")
     lab = lambda t: [(t, {"bold": True, "color": BLUE, "size": 15})]
-    text(s, 8.95, 1.85, 3.95, 5.0, [lab("SPY"), spy_t, lab("TimesFM"), tf_t, lab("Why"), why_t], size=15, space_after=3, name="Explanation")
+    text(s, 8.95, 1.85, 3.95, 5.0, [lab("SPY"), spy_t, lab("TimesFM + drift"), tf_t, lab("Why"), why_t], size=15, space_after=3, name="Explanation")
     # extra gap before labels: set space_before on label paragraphs
     for p in s.shapes[-1].text_frame.paragraphs:
-        if p.runs and p.runs[0].font.bold and p.runs[0].text in ("TimesFM", "Why"): p.space_before = Pt(9)
-    text(s, 0.5, 6.97, 11.2, 0.3, ["red = whole 95% interval below 0.5; 5-day windows; year analysis is exploratory (after the test)"], size=11, color=MUTE, name="Footnote")
+        if p.runs and p.runs[0].font.bold and p.runs[0].text in ("TimesFM + drift", "Why"): p.space_before = Pt(9)
+    text(s, 0.5, 6.9, 11.4, 0.45, ["TimesFM = with the drift layer (stacking h=1, recalibration h=5). Red = whole 95% interval below 0.5; amber = AUC below 0.45 but the interval reaches 0.5. "
+                                   "Figure and phases: 5-day windows. Year analysis is exploratory (after the test)."], size=11, color=MUTE, name="Footnote")
 
-# ---------------------------------------------------------------- 11 root cause (TIMESFM_ROOT_CAUSE.md)
-def fig_slide(title, notes, png, alt, bullets, answer, foot):
+# ---------------------------------------------------------------- 12 root cause (TIMESFM_ROOT_CAUSE.md)
+def fig_slide(title, notes, png, alt, bullets, answer, foot, sub=None):
     s = new_slide(title, notes)
+    if sub: text(s, 0.5, 0.93, 12.3, 0.35, [sub], size=17, color=MUTE, name="Subtitle")
     pic(s, FIG / png, 0.45, 1.45, 7.45, alt)
     text(s, 8.2, 1.55, 4.65, 4.4, bullets, size=16, space_after=12, bullets=True, name="Bullets")
     text(s, 0.5, 6.1, 12.3, 0.45, [answer], size=18, name="Answer")
@@ -278,7 +289,7 @@ def fig_slide(title, notes, png, alt, bullets, answer, foot):
     return s
 
 fig_slide("Is the transformer the root cause?",
- "[~18 s] Is the transformer the problem? We split every forecast into the transformer's part and the built-in trend line. "
+ "[~18 s] Is the transformer the problem? This is the raw TimesFM forecast, under the drift layer. We split every forecast into the transformer's part and the built-in trend line. "
  "Neither part is significantly below one half. The weak years, 2020 and 2022, sit in the transformer's output, "
  "but simple models like a random walk with drift score just as low there. In 2025 the trend line is the weaker part. "
  "So we find no transformer defect: simple extrapolators fail in the same years.",
@@ -287,33 +298,47 @@ fig_slide("Is the transformer the root cause?",
   "2020 and 2022 are low in the transformer's output, but simple non-transformer forecasters (random walk + drift, AR(5)) are just as low there.",
   "2025: the trend line is the weaker part (0.38)."],
  [("Answer: ", {"bold": True}), ("no transformer defect found; simple extrapolators fail in the same years.", {"bold": True, "color": BLUE})],
- "Exploratory (after the test); bars = 95% block-bootstrap intervals; details in TIMESFM_ROOT_CAUSE.md")
+ "Exploratory (after the test); bars = 95% block-bootstrap intervals; details in TIMESFM_ROOT_CAUSE.md",
+ sub="Analysis of the raw TimesFM score (static, before the drift layer)")
 
-# ---------------------------------------------------------------- 12 drift methods (TIMESFM_DRIFT.md)
-fig_slide("Can the team's drift methods fix it?",
- "[~15 s] We asked whether the drift methods from our main experiment can fix TimesFM. We left the model frozen and added four layers on top of its score, "
- "chose the settings on 2015 to 2018, and ran 2019 to 2025 once. No layer beats both the plain TimesFM score and our fixed logistic regression. "
- "The best one, stacking at one day, gets AUC 0.52, which isn't significant against the logistic regression. At five days only the logistic regression is above chance.",
+# ---------------------------------------------------------------- 13 drift methods (TIMESFM_DRIFT.md)
+fig_slide("The drift layer: four methods compared",
+ "[~10 s] The detail behind the drift layer: four layers on the frozen score, settings chosen on 2015 to 2018, test run once. "
+ "Stacking at one day and recalibration at five days had the biggest 2015 to 2018 gain, so they are in this talk. No gain is significant, and at five days the logistic regression is clearly better.",
  "drift_methods.png", "Bar chart: test AUC at h=1 and h=5 for static TimesFM, four drift methods and the fixed logistic regression",
- ["On top of the frozen TimesFM score: recalibration, stacking, Hedge, drift detector.",
+ ["Four layers on the frozen TimesFM score: recalibration, stacking, Hedge, drift detector.",
   "Settings chosen on 2015–2018 and locked; test 2019–2025 run once.",
-  "None beats both static TimesFM and the fixed LR. Best: stacking at h=1, AUC 0.524 (not significant vs LR).",
-  "At h=5 only the fixed LR is above a coin flip (0.536)."],
- [("Answer: ", {"bold": True}), ("no. Re-weighting TimesFM's score does not fix its ranking.", {"bold": True, "color": BLUE})],
- "Pre-registered, but TimesFM's 2019–2025 results were already known; details in TIMESFM_DRIFT.md")
+  "Used in this talk: stacking at h=1 (0.482 → 0.524) and recalibration at h=5 (0.459 → 0.481), the largest 2015–2018 gains.",
+  "Not significant after correction. h=5 stays below 0.5 and the fixed LR (0.536) stays better; at h=1 the stack is +0.017 above the LR."],
+ [("Result: ", {"bold": True}), ("gains over static TimesFM are at most 0.04 and not significant.", {"bold": True, "color": BLUE})],
+ "Pre-registered per family; the cross-method pick used 2015–2018 numbers but its rule was set after the test; details in TIMESFM_DRIFT.md")
 
-# ---------------------------------------------------------------- 13 bottom line
+# ---------------------------------------------------------------- 14 VIX on top of the drift layer (TIMESFM_VIX.md, follow-up section)
+fig_slide("Does the VIX help TimesFM?",
+ "[~15 s] Does the VIX help on top of the drift layer? Same baseline as the rest of this talk. We refit the layer when the VIX regime flips, picked the model by VIX regime, "
+ "added VIX terms to the layer, and removed the VIX from TimesFM's inputs. No variant is significantly better than the baseline, and removing the VIX changes nothing. "
+ "This follow-up came after the earlier results, so it is exploratory.",
+ "vix_drift_methods.png", "Bar chart: test AUC at h=1 and h=5 for TimesFM with the drift layer, three VIX variants of the layer, the layer without the VIX input and the fixed logistic regression",
+ ["Four changes to the drift layer: refit when the VIX regime flips, pick the model by VIX regime, add VIX terms, or remove the VIX from TimesFM's inputs.",
+  "Baseline AUC: 0.524 (h=1) and 0.481 (h=5).",
+  "With the VIX: h=1 0.463–0.521 and h=5 0.474–0.486. None is significantly better than the baseline.",
+  "VIX removed from the input: 0.530 (h=1) and 0.479 (h=5). The VIX in the input does not help."],
+ [("Answer: ", {"bold": True}), ("no. No VIX version is significantly better than the drift layer alone.", {"bold": True, "color": BLUE})],
+ "Exploratory: asked after the TimesFM, drift and VIX test results were known; the drift layer was picked by a rule set after its test. Details in TIMESFM_VIX.md",
+ sub="Baseline: TimesFM + drift layer")
+
+# ---------------------------------------------------------------- 15 bottom line
 s = new_slide("Bottom line",
- "[~10 s] So: zero-shot TimesFM-3 can't call SPY's direction. In calm years it's a coin flip; in the fall years it leans the wrong way in the rebound. We explained part of 2025; 2020, 2022 and 2024 are still open. Thank you.")
-items = ["Zero-shot TimesFM-3 cannot call SPY's direction: AUC 0.48 (h=1) and 0.46 (h=5), below our logistic regression.",
-         "Calm years: a coin flip. Fall years (2020, 2022, 2025): it leans the wrong way in the rebound.",
-         "Partly explained for 2025 (the detrending line); 2020, 2022 and 2024 (h=1) remain open."]
+ "[~8 s] So: with our drift layer TimesFM is just above a coin flip for tomorrow and below it for five days, no better than the logistic regression. The weak years are still the fall years. We explained part of 2025; 2020 and 2022 stay open.")
+items = ["TimesFM-3 + drift layer: AUC 0.52 (h=1) and 0.48 (h=5). Not significantly above our logistic regression at h=1 (0.51), clearly below it at h=5 (0.54).",
+         "Calm years: a coin flip. The weak 5-day years are still the fall years: 2020 (0.36), 2022 (0.38), 2025 (0.40).",
+         "Explained: part of raw TimesFM's 2025 (the trend line). 2020 and 2022 stay open. The h=1 stack's AUC comes from the forecast spread, not the up/down score."]
 for i, t in enumerate(items):
     y = 1.6 + i * 1.7
     shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, 0.5, y, 12.3, 1.4, CARD, radius=0.12, name=f"Card {i+1}")
     c = shape(s, MSO_SHAPE.OVAL, 0.85, y + 0.37, 0.66, 0.66, BLUE, name=f"Number {i+1}")
     shape_text(c, str(i + 1), 22, color=RGBColor(255, 255, 255), bold=True)
-    text(s, 1.85, y + 0.1, 10.6, 1.2, [t], size=22, anchor=MSO_ANCHOR.MIDDLE, name=f"Bullet {i+1}")
+    text(s, 1.85, y + 0.1, 10.6, 1.2, [t], size=20, anchor=MSO_ANCHOR.MIDDLE, name=f"Bullet {i+1}")
 
 prs.save(HERE / "timesfm3_slides.pptx")
 print("saved", n_slides, "slides")

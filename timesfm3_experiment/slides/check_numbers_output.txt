@@ -1,13 +1,125 @@
-year  said_up%  (report)  auc5  csv5  auc1  csv1
-2019 39.7 40 0.490 0.490 0.467 0.467 upwin 68%
-2020 66.0 66 0.377 0.377 0.466 0.466 upwin 63%
-2021 90.5 90 0.480 0.480 0.480 0.480 upwin 63%
-2022 37.8 38 0.392 0.392 0.516 0.516 upwin 46%
-2023 29.2 29 0.507 0.507 0.505 0.505 upwin 62%
-2024 74.6 75 0.506 0.506 0.421 0.421 upwin 64%
-2025 41.2 41 0.425 0.425 0.512 0.512 upwin 64%
-2020 fall (23, 23, 7): (23, 23, 7, np.float64(1.0), np.float64(0.30434782608695654), np.float64(0.8333682555936975))
-2020 rec (112, 69, 79): (112, 69, 79, np.float64(0.6160714285714286), np.float64(0.7053571428571429), np.float64(0.604593274842923))
-2022 rebounds (90, 71%, 4%): 90 0.7111111111111111 0.044444444444444446 meanP 0.4631404874087096 falls meanP 0.6081831157870575
-2025 rec (120, 17, 91): (120, 17, 91, np.float64(0.14166666666666666), np.float64(0.7583333333333333), np.float64(0.4772258134861442))
-2025 fall called up / right: (34, 34, 13, np.float64(1.0), np.float64(0.38235294117647056), np.float64(0.7487478839994441))
+frames reproduce timesfm_drift_test_levels.csv to 1e-5 (stack-4, platt-6, static, fixed LR; both horizons)
+
+drift_year_detail.csv matches the frames (AUC, called-up share, static called-up share)
+
+--- slide 4: result
+ok   slide  4  'AUC 0.52 for tomorrow'                           <- stack-4 h=1 AUC 0.524
+ok   slide  4  'it scores 0.48'                                  <- platt-6 h=5 AUC 0.481
+ok   slide  4  "regression's 0.51"                               <- fixed LR h=1 0.508
+ok   slide  4  "regression's 0.54"                               <- fixed LR h=5 0.536
+ok   slide  4  '2020, 2022, 2025'                                <- three lowest h=5 years [2020, 2022, 2025]
+ok   slide  4  '1,755–1,759 days'                                <- n h=5 1755, h=1 1759
+ok   slide  4  'h=1 +0.043 [−0.003, +0.090]'                     <- stack-4 - static, h=1, bootstrap 95%
+ok   slide  4  'h=5 +0.022 [+0.001, +0.046]'                     <- platt-6 - static, h=5, bootstrap 95%
+ok   slide  4  'fixed LR +0.017'                                 <- stack-4 - fixed LR, h=1
+ok       Holm-adjusted AUC p: h1 stack vs static 0.562, vs LR 1.000; h5 platt vs static 0.312; none < 0.05
+
+--- year slides 5-11 (badges, 95% block-bootstrap CIs, red/amber)
+ok       red = [(2020, 5), (2022, 5)], amber = [(2025, 5)]
+ok   slide  5  'h=5 AUC 0.48'                                    <- 2019 h=5 AUC 0.479
+ok   slide  5  'h=1 AUC 0.57'                                    <- 2019 h=1 AUC 0.572
+ok   slide  5  '2019 · '                                         <- title
+ok   slide  6  'h=5 AUC 0.36'                                    <- 2020 h=5 AUC 0.363
+ok   slide  6  'h=1 AUC 0.47'                                    <- 2020 h=1 AUC 0.474
+ok   slide  6  '2020 · '                                         <- title
+ok   slide  7  'h=5 AUC 0.49'                                    <- 2021 h=5 AUC 0.488
+ok   slide  7  'h=1 AUC 0.58'                                    <- 2021 h=1 AUC 0.582
+ok   slide  7  '2021 · '                                         <- title
+ok   slide  8  'h=5 AUC 0.38'                                    <- 2022 h=5 AUC 0.383
+ok   slide  8  'h=1 AUC 0.54'                                    <- 2022 h=1 AUC 0.538
+ok   slide  8  '2022 · '                                         <- title
+ok   slide  9  'h=5 AUC 0.47'                                    <- 2023 h=5 AUC 0.472
+ok   slide  9  'h=1 AUC 0.49'                                    <- 2023 h=1 AUC 0.491
+ok   slide  9  '2023 · '                                         <- title
+ok   slide 10  'h=5 AUC 0.54'                                    <- 2024 h=5 AUC 0.539
+ok   slide 10  'h=1 AUC 0.60'                                    <- 2024 h=1 AUC 0.599
+ok   slide 10  '2024 · '                                         <- title
+ok   slide 11  'h=5 AUC 0.40'                                    <- 2025 h=5 AUC 0.395
+ok   slide 11  'h=1 AUC 0.55'                                    <- 2025 h=1 AUC 0.548
+ok   slide 11  '2025 · '                                         <- title
+ok   slide  5  '(0.35–0.64)'                                     <- 2019 h5 CI [0.346, 0.635]
+ok   slide  7  '(0.36–0.59)'                                     <- 2021 h5 CI [0.363, 0.586]
+ok   slide  9  'interval 0.30–0.68'                              <- 2023 h5 CI [0.304, 0.677]
+ok   slide 10  '(0.56–0.68)'                                     <- 2024 h1 CI [0.561, 0.683]
+ok   slide  6  'whole interval below one half'                   <- 2020 h5 CI hi 0.475 < 0.5
+ok   slide  8  'whole interval below one half'                   <- 2022 h5 CI hi 0.493 < 0.5
+ok   slide 10  'Raw TimesFM scored 0.42'                         <- 2024 h1 static AUC 0.421
+ok   slide 10  'The 5-day AUC is a coin flip (0.54)'             <- 2024 h5 AUC 0.539, CI [0.454, 0.668] includes 0.5
+ok   slide  5  "tomorrow's 0.57"                                 <- 2019 h1 AUC 0.572, CI lo 0.497 < 0.5
+
+--- up calls, up rates (h=5)
+ok   slide  5  'Said “up” on 38% of days, while 68% of 5-day windows went up'  <- 2019 called-up share, 5-day up rate
+ok   slide  5  'TimesFM said up on 38 percent of days'           <- 2019 called up 0.381
+ok   slide  6  'Said “up” every day of the crash (right on 30%)'  <- 2020 fall called up 1.00, hit 0.304
+ok   slide  6  '“up” on 41% of days, right on 40%; always “up” gets 71%'  <- 2020 recovery called 0.411, hit 0.402, up rate 0.705
+ok   slide  6  'up on only 41 percent'                           <- 2020 recovery called up 0.411
+ok   slide  7  'Said “up” on 68% of days (raw TimesFM: 90%), while 63% of windows went up'  <- 2021 called up, static called up, up rate
+ok   slide  7  '68 percent of days instead of 90'                <- 2021 0.683 vs static 0.905
+ok   slide  8  'the market rose in 71% of windows, but TimesFM said “up” on only 1% of those days'  <- 2022 bounces up rate 0.711, called up 0.011 (1 of 90 days)
+ok   slide  8  'higher in the falls (0.50) than in the bounces (0.33)'  <- 2022 mean P(up) falls vs bounces
+ok   slide  8  '71 percent of the windows'                       <- 0.711
+ok   slide  8  'only 1 percent'                                  <- 0.011
+ok   slide  9  'Said “up” on 61% of days (raw TimesFM: 29%), close to the 62% of windows that went up'  <- 2023 called up, static, up rate
+ok   slide  9  'from 29 to 61 percent'                           <- 2023 static 0.292 -> 0.608
+ok   slide 11  'Said “up” on 76% of fall days (right on 56%)'    <- 2025 fall called 0.7647, hit 0.5588
+ok   slide 11  'the market rose in 76% of windows, but TimesFM said “up” on only 7% of days'  <- 2025 recovery up 0.758, called 0.067
+ok   slide 11  '76 percent of the windows'                       <- 0.758
+ok   slide 11  'only 7 percent'                                  <- 0.067
+ok   slide 11  'most fall days'                                  <- 2025 fall called up 0.76 (majority)
+
+--- 'Why' claims re-checked on the drift frame (h=5): turn part = fit of the score on SPY's past 20-day move; rest = residual
+ok   slide  6  'that part alone scores 0.54. The rest of the forecast scores 0.34'  <- 2020 turn 0.541, rest 0.341
+ok   slide  6  'The bounce habit scores 0.54; the rest scores 0.34'  <- 2020 same
+ok   slide  8  'that part scores 0.51); the rest of the forecast (0.37)'  <- 2022 turn 0.507, rest 0.371
+ok       2025 'does not fix it': recovery called-up 7% (static 14%), AUC 0.395 vs static 0.425
+ok   slide 11  'The drift layer does not fix'                    <- claim: platt-6 h=5 2025 AUC stays below 0.45
+
+--- SPY facts quoted on year slides (timesfm_spy_years.csv)
+ok   slide  5  '+31%'                                            <- 2019 return 0.3122
+ok   slide  5  '−7%'                                             <- 2019 max fall -0.0662
+ok   slide  6  '−34%'                                            <- 2020 max fall -0.3372
+ok   slide  7  '+29%'                                            <- 2021 return 0.2873
+ok   slide  7  '−5%'                                             <- 2021 max fall -0.0511
+ok   slide  8  '−18%'                                            <- 2022 return -0.1818
+ok   slide  8  '−24%'                                            <- 2022 max fall from high -0.2450
+ok   slide  9  '+26%'                                            <- 2023 return 0.2618
+ok   slide  9  '−10%'                                            <- 2023 max fall -0.0997
+ok   slide 10  '+25%'                                            <- 2024 return 0.2489
+ok   slide 10  '−8%'                                             <- 2024 max fall -0.0841
+ok   slide 11  '−19%'                                            <- 2025 max fall -0.1876
+
+--- slide 12 (raw TimesFM, unchanged numbers) vs timesfm_rootcause_summary.csv / components
+ok   slide 12  'h=5 AUC 0.480 and 0.470 (official 0.459)'        <- transformer part, detrending-line slope, official
+ok   slide 12  '(0.38)'                                          <- 2025 detrending-line slope AUC
+
+--- slide 13 (drift detail)
+ok   slide 13  'stacking at h=1 (0.482 → 0.524)'                 <- static -> stack-4, h=1
+ok   slide 13  'recalibration at h=5 (0.459 → 0.481)'            <- static -> platt-6, h=5
+ok   slide 13  'the fixed LR (0.536)'                            <- fixed LR h=5
+ok   slide 13  'the stack is +0.017 above the LR'                <- stack-4 - fixed LR, h=1
+ok   slide 13  'at most 0.04'                                    <- largest used gain 0.043
+ok       largest 2015-2018 gain: h1.stack 0.0199, h5.platt 0.0118 (max of their horizon's families)
+
+--- slide 14 (VIX on top of the drift layer; baseline = TimesFM + drift layer)
+ok   slide 14  'Baseline AUC: 0.524 (h=1) and 0.481 (h=5)'       <- D0 = stack-4 (h=1), platt-6 (h=5)
+ok   slide 14  'h=1 0.463–0.521'                                 <- D1-D3 AUC range at h=1
+ok   slide 14  'h=5 0.474–0.486'                                 <- D1-D3 AUC range at h=5
+ok   slide 14  'None is significantly better than the baseline'  <- smallest Holm p over the 8 primary tests per horizon: 1.000 (> 0.05)
+ok   slide 14  'VIX removed from the input: 0.530 (h=1) and 0.479 (h=5)'  <- D4 = drift layer on the no-VIX forecasts
+ok   slide 14  'Baseline: TimesFM + drift layer'                 <- subtitle
+ok   slide 14  'the few small gains are not significant'         <- any positive D1-D3 difference vs D0 (or D0 - D4) has Holm p > 0.05: asserted above
+ok   slide 14  'Exploratory'                                     <- footnote
+ok   slide 14  '[~15 s]'                                         <- speaker notes length tag
+ok       slide 14 numbers recomputed from timesfm_vixdrift_test_predictions.pkl (D0, D4) and match the levels CSV to 1e-5
+
+--- slide 15 (bottom line)
+ok   slide 15  'AUC 0.52 (h=1) and 0.48 (h=5)'                   <- stack-4, platt-6
+ok   slide 15  'at h=1 (0.51)'                                   <- fixed LR h=1 0.508
+ok   slide 15  'at h=5 (0.54)'                                   <- fixed LR h=5 0.536
+ok   slide 15  '2020 (0.36), 2022 (0.38), 2025 (0.40)'           <- h=5 weak years
+
+--- slide 3 worked example (made-up quantiles, unchanged)
+ok   slide  3  'about 47.5% chance of ending lower'              <- interpolated 0.475
+ok   slide  3  'P(up) ≈ 52.5%'                                   <- 0.525
+
+checks passed: 95, failed: 0

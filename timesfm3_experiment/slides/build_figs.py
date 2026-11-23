@@ -1,4 +1,4 @@
-"""Chart PNGs for the TimesFM-3 slides. Reads saved results only (no TimesFM run). Output: slides/fig/*.png"""
+"""Chart PNGs for the TimesFM-3 slides (drift-applied TimesFM). Reads saved results only (no TimesFM run). Output: slides/fig/*.png"""
 import pandas as pd, numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -28,26 +28,29 @@ def clean(ax, grid_y=True):
     ax.set_axisbelow(True)
     ax.tick_params(colors=MUTE, labelsize=14, length=0)
 
-P = pd.read_pickle(RES / "timesfm_test_predictions.pkl")
-t5, t1 = P[("tfm.h5", "timesfm")], P[("tfm.h1", "timesfm")]
-by = pd.read_csv(RES / "timesfm_test_by_year.csv"); by = by[by.role == "timesfm"]
-det = pd.read_csv(RES / "timesfm_year_detail.csv"); det = det[det.year != "all"]; det["year"] = det.year.astype(int)
-ph = pd.read_csv(RES / "timesfm_year_phases.csv")
+# Drift-applied TimesFM (best version per horizon, chosen on 2015-2018): h=1 stack-4, h=5 platt-6.
+P = pd.read_pickle(RES / "timesfm_drift_test_predictions.pkl")
+t5, t1 = P[(5, "platt")], P[(1, "stack")]
+lev = pd.read_csv(RES / "timesfm_drift_test_levels.csv")
+det = pd.read_csv(RES / "timesfm_drift_year_detail.csv"); det = det[det.year != "all"]; det["year"] = det.year.astype(int)
+ph = pd.read_csv(RES / "timesfm_drift_year_phases.csv")
 px = pd.read_pickle(ROOT / "data" / "aligned_prices.pkl")["SPY"]["Close"].astype(float)
+def level(h, role, cfg=None):
+    r = lev[(lev.horizon == h) & (lev.role == role)]
+    return (r[r.cfg == cfg] if cfg else r).roc_auc.iloc[0]
 
-# ---------------- slide 3: overall AUC by horizon + per-year h=5
+# ---------------- slide 4: overall AUC by horizon + per-year h=5
 auc1, auc5 = roc_auc_score(t1.y, t1.proba), roc_auc_score(t5.y, t5.proba)
-print("overall AUC h1, h5:", round(auc1, 3), round(auc5, 3))
-assert abs(auc1 - 0.482) < 0.001 and abs(auc5 - 0.459) < 0.001
-LR = {1: 0.508, 5: 0.536}   # project's fixed logistic regression (as given)
-lr1 = roc_auc_score(P[("tfm.h1", "fixed_lr")].y, P[("tfm.h1", "fixed_lr")].proba)
-lr5 = roc_auc_score(P[("tfm.h5", "fixed_lr")].y, P[("tfm.h5", "fixed_lr")].proba)
+print("overall AUC h1 (stack-4), h5 (platt-6):", round(auc1, 3), round(auc5, 3))
+assert abs(auc1 - level(1, "stack", "stack-4")) < 1e-5 and abs(auc5 - level(5, "platt", "platt-6")) < 1e-5
+lr1 = roc_auc_score(P[(1, "fixed_lr")].y, P[(1, "fixed_lr")].proba)
+lr5 = roc_auc_score(P[(5, "fixed_lr")].y, P[(5, "fixed_lr")].proba)
 print("fixed_lr AUC from pkl:", round(lr1, 3), round(lr5, 3))
-assert abs(lr1 - LR[1]) < 0.001 and abs(lr5 - LR[5]) < 0.001
+assert abs(lr1 - level(1, "fixed_lr")) < 1e-5 and abs(lr5 - level(5, "fixed_lr")) < 1e-5
 
 fig, ax = plt.subplots(figsize=(6.0, 4.2)); clean(ax)
 x = np.arange(2); w = 0.34
-vals = {"TimesFM-3": [auc1, auc5], "Logistic regression": [lr1, lr5]}
+vals = {"TimesFM-3 + drift layer": [auc1, auc5], "Logistic regression": [lr1, lr5]}
 for i, (name, v) in enumerate(vals.items()):
     xs = x + (i - 0.5) * (w + 0.04)
     col = BLUE if i == 0 else SLATE
@@ -56,8 +59,8 @@ for i, (name, v) in enumerate(vals.items()):
         ax.text(xx, vv + (0.004 if vv >= 0.5 else -0.004), f"{vv:.3f}", ha="center", va="bottom" if vv >= 0.5 else "top",
                 fontsize=15, color=INK, fontweight="bold")
 ax.axhline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
-ax.text(-0.52, 0.5, "coin flip", ha="left", va="bottom", fontsize=14, color=INK)
-ax.set_ylim(0.43, 0.58); ax.set_xlim(-0.55, 1.62)
+ax.text(-0.93, 0.5, "coin flip", ha="left", va="bottom", fontsize=14, color=INK)
+ax.set_ylim(0.43, 0.58); ax.set_xlim(-0.95, 1.62)
 ax.set_xticks(x); ax.set_xticklabels(["h=1\ntomorrow", "h=5\nnext 5 days"], fontsize=15, color=INK)
 ax.set_yticks([0.45, 0.5, 0.55]); ax.set_ylabel("AUC", color=MUTE)
 ax.legend(loc="upper left", frameon=False, fontsize=14, labelcolor=INK, borderaxespad=0)
@@ -65,7 +68,7 @@ fig.tight_layout(); fig.savefig(FIG / "auc_horizon.png", dpi=DPI); plt.close(fig
 
 fig, ax = plt.subplots(figsize=(6.0, 4.2)); clean(ax)
 yrs = list(range(2019, 2026))
-a5 = [by[(by.year == y) & (by.horizon == 5)].roc_auc.iloc[0] for y in yrs]
+a5 = [det[(det.year == y) & (det.horizon == 5)].auc.iloc[0] for y in yrs]
 fall = {2020, 2022, 2025}
 ax.bar(range(7), [a - 0.5 for a in a5], 0.66, bottom=0.5, color=[VIOLET if y in fall else SLATE for y in yrs], zorder=3)
 for i, a in enumerate(a5):
@@ -149,7 +152,7 @@ for yr in range(2019, 2026):
         a0.axvspan(a, e + pd.Timedelta(hours=23), color=col, alpha=al, lw=0, zorder=1)
         a3.axvspan(a, e + pd.Timedelta(hours=23), color=col, alpha=min(1, al * 2.2), lw=0)
         a0.text(a + (e - a) / 2, 0.985, lab, transform=a0.get_xaxis_transform(), ha="center", va="top", fontsize=14, color=INK, fontweight="bold", zorder=5)
-    for ax, ser, name in ((a1, g.pred, "TimesFM said “up” (h=5)"), (a2, g.y, "Market went up (next 5 days)")):
+    for ax, ser, name in ((a1, g.pred, "TimesFM + drift said “up” (h=5)"), (a2, g.y, "Market went up (next 5 days)")):
         ax.bar(g.index, np.ones(len(g)), width=1.25, color=[BLUE if v else GREY for v in ser], zorder=2)
         ax.set_ylim(0, 1); ax.set_yticks([])
         ax.text(0.0, 1.12, name, transform=ax.transAxes, fontsize=14, color=INK, va="bottom")
