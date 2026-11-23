@@ -83,7 +83,64 @@ text(s, 0.8, 3.55, 5.9, 1.4, ["Can a pretrained forecaster call the market's dir
 pic(s, FIG / "title_spy.png", 7.2, 2.2, 5.5, "SPY close 2019 to 2025 with the three big falls shaded violet")
 text(s, 7.2, 5.45, 5.5, 0.3, ["SPY, 2019–2025; violet = the three big falls (2020, 2022, 2025)"], size=12, color=MUTE)
 
-# ---------------------------------------------------------------- 2 how it works
+# ---------------------------------------------------------------- 2 how it was built
+# Facts from the model card (~/.cache/huggingface/.../timesfm-3.0-pytorch/README.md) and report section 3.
+from pptx.enum.shapes import MSO_CONNECTOR
+
+def arrow(slide, x1, y1, x2, y2, color="8A8F98", w=1.75):
+    c = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
+    c.line.color.rgb = rgb(color); c.line.width = Pt(w)
+    ln = c.line._get_or_add_ln(); te = etree.SubElement(ln, qn("a:tailEnd")); te.set("type", "triangle")
+    return c
+
+def card(slide, x, y, w, h, lines, fill=CARD, name=None):
+    """lines: list of (text, size, bold, color) paragraphs inside a rounded card."""
+    b = shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h, fill, radius=0.12, name=name)
+    tf = b.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = Inches(0.18); tf.margin_top = tf.margin_bottom = Inches(0.05)
+    for i, (t, sz, bd, col) in enumerate(lines):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        r = p.add_run(); r.text = t; f = r.font; f.name = FONT; f.size = Pt(sz); f.bold = bd; f.color.rgb = col
+    return b
+
+s = new_slide("How TimesFM-3 was built",
+ "[~20 s] First, how TimesFM-3 was built. Google Research trained one 20-layer transformer, 331 million parameters, "
+ "on over a trillion time points: a large public collection of time series, Wikipedia page views, Google Trends queries, and synthetic curves. "
+ "It cuts the past into chunks of 32 points, reads them along time and across related series, and writes the next points as nine quantiles. "
+ "It was not trained on our task: we use the released weights as they are. That is what zero-shot means.")
+text(s, 0.5, 1.3, 3.6, 0.35, ["Pretraining data"], size=16, bold=True, color=MUTE, name="Data header")
+data_cards = [("Public time-series collection", "GiftEvalPretrain: many public datasets"),
+              ("Wikipedia page views", "up to Nov 2023"),
+              ("Google Trends top queries", "up to the end of 2022"),
+              ("Synthetic data", "plus augmented (transformed) series")]
+targets = [2.95, 3.45, 3.95, 4.45]
+for i, (t1, t2) in enumerate(data_cards):
+    y = 1.75 + i * 1.08
+    card(s, 0.5, y, 3.6, 0.9, [(t1, 16, True, INK), (t2, 13, False, MUTE)], name=f"Data {i+1}")
+    arrow(s, 4.12, y + 0.45, 4.72, targets[i])
+box = shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, 4.75, 2.55, 3.35, 2.3, BLUE, radius=0.1, name="TimesFM box")
+tf = box.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+for i, (t, sz, bd) in enumerate([("TimesFM-3", 30, True), ("Google Research · Aug 2026", 15, False),
+                                 ("20-layer transformer", 15, False), ("331M parameters", 15, False),
+                                 ("1T+ time points", 15, False)]):
+    p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+    p.alignment = PP_ALIGN.CENTER
+    if i == 1: p.space_before = Pt(6)
+    r = p.add_run(); r.text = t; f = r.font; f.name = FONT; f.size = Pt(sz); f.bold = bd; f.color.rgb = RGBColor(255, 255, 255)
+arrow(s, 8.12, 3.7, 8.62, 3.7)
+text(s, 8.65, 1.3, 4.2, 0.35, ["How it reads a series"], size=16, bold=True, color=MUTE, name="Steps header")
+steps_b = [("1  Cut into chunks", "the past is split into patches of 32 points"),
+           ("2  Read with attention", "20 layers look along time and across the related series"),
+           ("3  Draw the future", "the next points come out as 9 quantiles (10%…90%)")]
+for i, (t1, t2) in enumerate(steps_b):
+    card(s, 8.65, 1.75 + i * 1.44, 4.2, 1.22, [(t1, 16, True, BLUE), (t2, 14, False, INK)], name=f"Step {i+1}")
+text(s, 0.5, 6.25, 12.3, 0.4, [[("Not trained on our task: ", {"bold": True}),
+                                ("we use Google's released weights as they are (", {}),
+                                ("zero-shot", {"bold": True, "color": BLUE}), (").", {})]], size=17, name="Zero-shot line")
+text(s, 0.5, 7.0, 9.0, 0.3, ["Source: model card google/timesfm-3.0-pytorch (data, layers, patch size)"], size=11, color=MUTE, name="Source")
+
+# ---------------------------------------------------------------- 3 how it works
 s = new_slide("How TimesFM-3 works",
  "[~35 s] TimesFM-3 is a transformer with 331 million parameters, pretrained by Google on over a trillion points of time-series data. "
  "We use it zero-shot: no training on our data. Each day we give it the last 256 trading days of SPY plus 15 related markets. "
@@ -211,7 +268,41 @@ for yr, sub, notes, spy_t, tf_t, why_t in YEARS:
         if p.runs and p.runs[0].font.bold and p.runs[0].text in ("TimesFM", "Why"): p.space_before = Pt(9)
     text(s, 0.5, 6.97, 11.2, 0.3, ["red = whole 95% interval below 0.5; 5-day windows; year analysis is exploratory (after the test)"], size=11, color=MUTE, name="Footnote")
 
-# ---------------------------------------------------------------- 11 bottom line
+# ---------------------------------------------------------------- 11 root cause (TIMESFM_ROOT_CAUSE.md)
+def fig_slide(title, notes, png, alt, bullets, answer, foot):
+    s = new_slide(title, notes)
+    pic(s, FIG / png, 0.45, 1.45, 7.45, alt)
+    text(s, 8.2, 1.55, 4.65, 4.4, bullets, size=16, space_after=12, bullets=True, name="Bullets")
+    text(s, 0.5, 6.1, 12.3, 0.45, [answer], size=18, name="Answer")
+    text(s, 0.5, 6.97, 11.2, 0.3, [foot], size=11, color=MUTE, name="Footnote")
+    return s
+
+fig_slide("Is the transformer the root cause?",
+ "[~18 s] Is the transformer the problem? We split every forecast into the transformer's part and the built-in trend line. "
+ "Neither part is significantly below one half. The weak years, 2020 and 2022, sit in the transformer's output, "
+ "but simple models like a random walk with drift score just as low there. In 2025 the trend line is the weaker part. "
+ "So we find no transformer defect: simple extrapolators fail in the same years.",
+ "root_cause.png", "Dot plot: h=5 AUC with 95% intervals for TimesFM, its transformer part, its trend-line part and three simple forecasters",
+ ["We split each forecast into the transformer's output and the built-in trend line: h=5 AUC 0.480 and 0.470 (official 0.459). Neither is significantly below 0.5.",
+  "2020 and 2022 are low in the transformer's output, but simple non-transformer forecasters (random walk + drift, AR(5)) are just as low there.",
+  "2025: the trend line is the weaker part (0.38)."],
+ [("Answer: ", {"bold": True}), ("no transformer defect found; simple extrapolators fail in the same years.", {"bold": True, "color": BLUE})],
+ "Exploratory (after the test); bars = 95% block-bootstrap intervals; details in TIMESFM_ROOT_CAUSE.md")
+
+# ---------------------------------------------------------------- 12 drift methods (TIMESFM_DRIFT.md)
+fig_slide("Can the team's drift methods fix it?",
+ "[~15 s] We asked whether the drift methods from our main experiment can fix TimesFM. We left the model frozen and added four layers on top of its score, "
+ "chose the settings on 2015 to 2018, and ran 2019 to 2025 once. No layer beats both the plain TimesFM score and our fixed logistic regression. "
+ "The best one, stacking at one day, gets AUC 0.52, which isn't significant against the logistic regression. At five days only the logistic regression is above chance.",
+ "drift_methods.png", "Bar chart: test AUC at h=1 and h=5 for static TimesFM, four drift methods and the fixed logistic regression",
+ ["On top of the frozen TimesFM score: recalibration, stacking, Hedge, drift detector.",
+  "Settings chosen on 2015–2018 and locked; test 2019–2025 run once.",
+  "None beats both static TimesFM and the fixed LR. Best: stacking at h=1, AUC 0.524 (not significant vs LR).",
+  "At h=5 only the fixed LR is above a coin flip (0.536)."],
+ [("Answer: ", {"bold": True}), ("no. Re-weighting TimesFM's score does not fix its ranking.", {"bold": True, "color": BLUE})],
+ "Pre-registered, but TimesFM's 2019–2025 results were already known; details in TIMESFM_DRIFT.md")
+
+# ---------------------------------------------------------------- 13 bottom line
 s = new_slide("Bottom line",
  "[~10 s] So: zero-shot TimesFM-3 can't call SPY's direction. In calm years it's a coin flip; in the fall years it leans the wrong way in the rebound. We explained part of 2025; 2020, 2022 and 2024 are still open. Thank you.")
 items = ["Zero-shot TimesFM-3 cannot call SPY's direction: AUC 0.48 (h=1) and 0.46 (h=5), below our logistic regression.",
