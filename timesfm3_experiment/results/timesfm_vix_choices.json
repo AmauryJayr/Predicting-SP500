@@ -1,0 +1,122 @@
+{
+  "chosen": {
+    "h1.recal": {
+      "cfg": "recal-5",
+      "eligible": false,
+      "family": "recal",
+      "horizon": 1,
+      "mean_d_auc": 0.0053,
+      "mean_d_ba": 0.01,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "N": 252,
+        "cal": "offset",
+        "cut": 0.9
+      }
+    },
+    "h1.select": {
+      "cfg": "select-3",
+      "eligible": false,
+      "family": "select",
+      "horizon": 1,
+      "mean_d_auc": -0.0053,
+      "mean_d_ba": 0.0072,
+      "n_configs": 4,
+      "n_eligible": 0,
+      "spec": {
+        "lookback": null,
+        "split": "tercile"
+      }
+    },
+    "h1.stack": {
+      "cfg": "stack-4",
+      "eligible": false,
+      "family": "stack",
+      "horizon": 1,
+      "mean_d_auc": -0.0245,
+      "mean_d_ba": -0.031,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "C": 0.3,
+        "mode": "fixed"
+      }
+    },
+    "h5.recal": {
+      "cfg": "recal-5",
+      "eligible": false,
+      "family": "recal",
+      "horizon": 5,
+      "mean_d_auc": 0.0191,
+      "mean_d_ba": 0.0088,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "N": 252,
+        "cal": "offset",
+        "cut": 0.9
+      }
+    },
+    "h5.select": {
+      "cfg": "select-2",
+      "eligible": false,
+      "family": "select",
+      "horizon": 5,
+      "mean_d_auc": -0.0333,
+      "mean_d_ba": -0.0037,
+      "n_configs": 4,
+      "n_eligible": 0,
+      "spec": {
+        "lookback": 504,
+        "split": "tercile"
+      }
+    },
+    "h5.stack": {
+      "cfg": "stack-7",
+      "eligible": false,
+      "family": "stack",
+      "horizon": 5,
+      "mean_d_auc": -0.0185,
+      "mean_d_ba": 0.0018,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "C": 0.3,
+        "R": 21,
+        "W": 504,
+        "mode": "rolling"
+      }
+    }
+  },
+  "ctx": 256,
+  "folds": [
+    "F2",
+    "VAL"
+  ],
+  "rule": "V1-V3, per horizon and family: eligible if delta BA > 0 and delta AUC > 0 vs the static TimesFM frame in BOTH folds F2 and VAL; best = highest mean(delta BA) + mean(delta AUC); if none is eligible the best-ranked config is still taken and flagged. V5: per signal, the cap with the highest mean over F2 and VAL of Sharpe(managed) - Sharpe(buy-and-hold) at 5 bps. V4 has no tunable choice.",
+  "v5": {
+    "rv20": {
+      "cap": 1.5,
+      "mean_d_sharpe_F2_VAL": {
+        "1.5": 0.0238,
+        "2.0": 0.021
+      }
+    },
+    "tfm_spread": {
+      "cap": 2.0,
+      "mean_d_sharpe_F2_VAL": {
+        "1.5": -0.2625,
+        "2.0": -0.2504
+      }
+    },
+    "vix": {
+      "cap": 2.0,
+      "mean_d_sharpe_F2_VAL": {
+        "1.5": -0.1996,
+        "2.0": -0.0967
+      }
+    }
+  },
+  "variant": "multi"
+}

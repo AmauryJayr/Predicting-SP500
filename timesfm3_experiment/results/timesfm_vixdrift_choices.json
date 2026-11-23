@@ -1,0 +1,82 @@
+{
+  "bootstrap": "common.paired_bootstrap, 2000 draws, block length max(20, 3h), seed 42; Holm (run_test.holm)",
+  "ctx": 256,
+  "d0": {
+    "h1": {
+      "cfg": "stack-4",
+      "family": "stack",
+      "spec": {
+        "C": 0.03,
+        "feats": "zms",
+        "mode": "fixed"
+      }
+    },
+    "h5": {
+      "cfg": "platt-6",
+      "family": "platt",
+      "spec": {
+        "N": 252,
+        "R": 21,
+        "cal": "offset"
+      }
+    }
+  },
+  "families": {
+    "isolating": "d2 - d2_blind on AUC and BA: 2 tests per horizon, Holm within horizon",
+    "primary": "d1-d0, d2-d0, d3-d0, d0-d4 on AUC and BA: 8 tests per horizon, Holm within horizon",
+    "vs_lr": "d0..d4 - fixed_lr on AUC and BA: 10 tests per horizon, Holm within horizon"
+  },
+  "inherited_from": {
+    "timesfm_drift_choices.json": "5b052f2edc30071f03788754126c13e1c72841bc5ece2235fd797ec869272946",
+    "timesfm_vix_choices.json": "488751dc6cc4f96f1d6583dd45e305d4ef1da821dd6d9d9b04036584bf2bf65b"
+  },
+  "no_vix_input": {
+    "cache": "results/timesfm_vix_cache/novix/multi_ctx256.npz",
+    "rule": "z, median return and q90-q10 spread recomputed from the no-VIX quantiles, same D0 layer"
+  },
+  "note": "Nothing is selected in this study: every setting is inherited from the drift and VIX studies or fixed here by design before any test metric. This follow-up was asked after the TimesFM, drift-layer and VIX test results were all known, and the drift layer itself was picked by a rule that was set after its own test. Nothing here is a clean out-of-sample confirmation. Treat the result as exploratory.",
+  "test_rows": {
+    "1": 1759,
+    "5": 1755
+  },
+  "variant": "multi",
+  "vix_recal_trigger": {
+    "h1": {
+      "N": 252,
+      "cal": "offset",
+      "cut": 0.9
+    },
+    "h5": {
+      "N": 252,
+      "cal": "offset",
+      "cut": 0.9
+    },
+    "min_gap": 21,
+    "regime": "1[vix_pct_rank_252d >= cut], rank known at close t"
+  },
+  "vix_select": {
+    "d0_expert_history": "walk-forward D0 from the first expert row to the day before TEST: expanding refit every 63 rows (h=1) or the D0 schedule (h=5); on TEST the D0 test frame",
+    "experts": [
+      "tfm",
+      "lr",
+      "up"
+    ],
+    "h1": {
+      "lookback": null,
+      "split": "tercile"
+    },
+    "h5": {
+      "lookback": 504,
+      "split": "tercile"
+    },
+    "min_rows": 30
+  },
+  "vix_terms": {
+    "extra_features": [
+      "vix_pct_rank_252d",
+      "z x (vix_pct_rank_252d - 0.5)"
+    ],
+    "h1": "stack-4 features + the two terms, C 0.03, fixed",
+    "h5": "logit p = z + a + b1 rank + b2 z (rank - 0.5); ML, L2 weight 1.0 on b1 b2 only; last 252 known rows, refit every 21 rows"
+  }
+}

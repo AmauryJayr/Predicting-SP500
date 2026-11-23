@@ -1,0 +1,7 @@
+horizon,family,cfg,n_refits,neg_slope_share,mean_slope,iso_n_refits,chosen,iso_chosen,mean_coef_rank,mean_coef_interaction
+1,recal,recal-5,20,0.00000,1.00000,27,,,,
+1,select,select-3,0,,,0,"{'up': 1685, 'lr': 74}",{'up': 1759},,
+1,stack,stack-4,0,1.00000,-0.04181,0,,,-0.10941,0.19645
+5,recal,recal-5,20,0.00000,1.00000,27,,,,
+5,select,select-2,0,,,0,"{'up': 831, 'lr': 800, 'tfm': 124}","{'lr': 892, 'up': 863}",,
+5,stack,stack-7,83,0.79762,-0.22083,83,,,-0.13316,-0.28765

@@ -1,0 +1,43 @@
+horizon,regime,model,n,roc_auc,balanced_acc,vix_cuts
+1,low VIX,TimesFM static,340,0.48192,0.47633,14.48/20.40
+1,mid VIX,TimesFM static,764,0.46803,0.47229,14.48/20.40
+1,high VIX,TimesFM static,655,0.49726,0.49919,14.48/20.40
+1,low VIX,"fixed LR (ours, reused frame)",340,0.51660,0.53667,14.48/20.40
+1,mid VIX,"fixed LR (ours, reused frame)",764,0.49703,0.49861,14.48/20.40
+1,high VIX,"fixed LR (ours, reused frame)",655,0.51583,0.51832,14.48/20.40
+1,low VIX,V1 VIX recalibration,340,0.49359,0.48640,14.48/20.40
+1,mid VIX,V1 VIX recalibration,764,0.46824,0.47145,14.48/20.40
+1,high VIX,V1 VIX recalibration,655,0.50370,0.49579,14.48/20.40
+1,low VIX,V2 VIX selection,340,0.45430,0.50000,14.48/20.40
+1,mid VIX,V2 VIX selection,764,0.45715,0.49013,14.48/20.40
+1,high VIX,V2 VIX selection,655,0.46906,0.49556,14.48/20.40
+1,low VIX,V3 VIX stacking,340,0.52275,0.52495,14.48/20.40
+1,mid VIX,V3 VIX stacking,764,0.51508,0.52731,14.48/20.40
+1,high VIX,V3 VIX stacking,655,0.46887,0.46964,14.48/20.40
+1,low VIX,TimesFM without VIX input,340,0.49896,0.49204,14.48/20.40
+1,mid VIX,TimesFM without VIX input,764,0.46572,0.48031,14.48/20.40
+1,high VIX,TimesFM without VIX input,655,0.49603,0.50228,14.48/20.40
+1,low VIX,LogReg fixed (team table on master),486,0.49921,0.48991,
+1,mid VIX,LogReg fixed (team table on master),722,0.52691,0.52625,
+1,high VIX,LogReg fixed (team table on master),551,0.46594,0.47261,
+5,low VIX,TimesFM static,336,0.45498,0.47908,14.48/20.40
+5,mid VIX,TimesFM static,764,0.46286,0.46827,14.48/20.40
+5,high VIX,TimesFM static,655,0.45978,0.46234,14.48/20.40
+5,low VIX,"fixed LR (ours, reused frame)",336,0.45917,0.46771,14.48/20.40
+5,mid VIX,"fixed LR (ours, reused frame)",764,0.53018,0.53015,14.48/20.40
+5,high VIX,"fixed LR (ours, reused frame)",655,0.56910,0.57531,14.48/20.40
+5,low VIX,V1 VIX recalibration,336,0.47230,0.47876,14.48/20.40
+5,mid VIX,V1 VIX recalibration,764,0.46086,0.46400,14.48/20.40
+5,high VIX,V1 VIX recalibration,655,0.50038,0.49162,14.48/20.40
+5,low VIX,V2 VIX selection,336,0.46857,0.47790,14.48/20.40
+5,mid VIX,V2 VIX selection,764,0.43573,0.45817,14.48/20.40
+5,high VIX,V2 VIX selection,655,0.53533,0.55749,14.48/20.40
+5,low VIX,V3 VIX stacking,336,0.34444,0.47422,14.48/20.40
+5,mid VIX,V3 VIX stacking,764,0.45550,0.49471,14.48/20.40
+5,high VIX,V3 VIX stacking,655,0.54481,0.53420,14.48/20.40
+5,low VIX,TimesFM without VIX input,336,0.43346,0.43918,14.48/20.40
+5,mid VIX,TimesFM without VIX input,764,0.47087,0.45619,14.48/20.40
+5,high VIX,TimesFM without VIX input,655,0.46911,0.47768,14.48/20.40
+5,low VIX,LogReg fixed (team table on master),482,0.52015,0.50962,
+5,mid VIX,LogReg fixed (team table on master),722,0.53632,0.51974,
+5,high VIX,LogReg fixed (team table on master),551,0.48945,0.50839,
