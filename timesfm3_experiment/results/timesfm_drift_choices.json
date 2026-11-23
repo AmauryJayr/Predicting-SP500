@@ -1,0 +1,135 @@
+{
+  "chosen": {
+    "h1.detect": {
+      "cfg": "detect-0",
+      "eligible": false,
+      "family": "detect",
+      "horizon": 1,
+      "mean_d_auc": -0.0029,
+      "mean_d_ba": -0.0135,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "W": 504,
+        "delta": 0.005,
+        "detector": "ph",
+        "lam": 0.5,
+        "stream": "logloss"
+      }
+    },
+    "h1.hedge": {
+      "cfg": "hedge-1",
+      "eligible": false,
+      "family": "hedge",
+      "horizon": 1,
+      "mean_d_auc": -0.0047,
+      "mean_d_ba": -0.0005,
+      "n_configs": 6,
+      "n_eligible": 0,
+      "spec": {
+        "eta": 20,
+        "loss_hl": 252
+      }
+    },
+    "h1.platt": {
+      "cfg": "platt-7",
+      "eligible": false,
+      "family": "platt",
+      "horizon": 1,
+      "mean_d_auc": 0.0055,
+      "mean_d_ba": -0.0011,
+      "n_configs": 12,
+      "n_eligible": 0,
+      "spec": {
+        "N": 252,
+        "R": 63,
+        "cal": "offset"
+      }
+    },
+    "h1.stack": {
+      "cfg": "stack-4",
+      "eligible": false,
+      "family": "stack",
+      "horizon": 1,
+      "mean_d_auc": 0.0199,
+      "mean_d_ba": -0.0045,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "C": 0.03,
+        "feats": "zms",
+        "mode": "fixed"
+      }
+    },
+    "h5.detect": {
+      "cfg": "detect-5",
+      "eligible": false,
+      "family": "detect",
+      "horizon": 5,
+      "mean_d_auc": 0.0,
+      "mean_d_ba": -0.0057,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "W": null,
+        "delta": 0.002,
+        "detector": "adwin",
+        "lam": null,
+        "stream": "error"
+      }
+    },
+    "h5.hedge": {
+      "cfg": "hedge-1",
+      "eligible": false,
+      "family": "hedge",
+      "horizon": 5,
+      "mean_d_auc": -0.0048,
+      "mean_d_ba": -0.0014,
+      "n_configs": 6,
+      "n_eligible": 0,
+      "spec": {
+        "eta": 20,
+        "loss_hl": 252
+      }
+    },
+    "h5.platt": {
+      "cfg": "platt-6",
+      "eligible": false,
+      "family": "platt",
+      "horizon": 5,
+      "mean_d_auc": 0.0118,
+      "mean_d_ba": 0.0194,
+      "n_configs": 12,
+      "n_eligible": 0,
+      "spec": {
+        "N": 252,
+        "R": 21,
+        "cal": "offset"
+      }
+    },
+    "h5.stack": {
+      "cfg": "stack-7",
+      "eligible": false,
+      "family": "stack",
+      "horizon": 5,
+      "mean_d_auc": -0.0129,
+      "mean_d_ba": 0.0095,
+      "n_configs": 8,
+      "n_eligible": 0,
+      "spec": {
+        "C": 0.03,
+        "R": 21,
+        "W": 504,
+        "feats": "zms",
+        "mode": "rolling"
+      }
+    }
+  },
+  "ctx": 256,
+  "folds": [
+    "F2",
+    "VAL"
+  ],
+  "rule": "per horizon and family: eligible if delta BA > 0 and delta AUC > 0 vs the static TimesFM frame in BOTH folds F2 and VAL; best = highest mean(delta BA) + mean(delta AUC); if none is eligible the best-ranked config is still taken and flagged",
+  "variant": "multi"
+}
