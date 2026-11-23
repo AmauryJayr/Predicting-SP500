@@ -1,0 +1,12 @@
+,value
+n_days,1759.0
+applied_share,0.40477544059124504
+max_abs_Qcapture_vs_official_cache,0.0
+max_abs_Qcapture_vs_Qout,0.0
+max_abs_addback_model_vs_numpy_line,4.988216681489632e-06
+max_abs_addback_spread_across_quantiles,3.4458935260772705e-07
+max_abs_N_plus_T_minus_Q,5.18223046963584e-06
+max_abs_median_identity(Qmed-a = (Nmed-r_t)+slope),5.051080955182502e-06
+apply_float64_replica_vs_model_mismatch_days (borderline std ratio 0.50009),1.0
+max_abs_RevIN_mean_vs_window_mean,1.0076910257339478e-06
+max_rel_RevIN_std_vs_window_std,8.655435447733396e-06
