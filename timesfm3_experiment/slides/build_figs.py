@@ -166,4 +166,57 @@ for yr in range(2019, 2026):
               ["fall", "recovery", "up", "not up"], loc="lower left", bbox_to_anchor=(0, 1.0), ncol=4, frameon=False, fontsize=13,
               labelcolor=INK, columnspacing=1.2, handlelength=1.2, borderaxespad=0.15)
     fig.savefig(FIG / f"year_{yr}.png", dpi=DPI); plt.close(fig)
+
+# ---------------- slide 13: TimesFM vs Chronos-2, what each raw score follows (Spearman, test days)
+tc = pd.read_csv(RES / "timesfm_vs_chronos_trailing_corr.csv"); tc = tc[tc.year == "all"]
+df_ = pd.read_csv(RES / "timesfm_vs_chronos_drift_features.csv"); df_ = df_[df_.feature == "spread_q90_q10"]
+def sp(h, model, vs):
+    if vs == "spread": return df_[(df_.h == h) & (df_.model == model)].spearman_with_z.iloc[0]
+    return tc[(tc.h == h) & (tc.model == model) & (tc.vs == vs)].spearman.iloc[0]
+rows = [("trailing 1-day return", "ret1"), ("trailing 5-day return", "ret5"), ("20-day realized vol", "vol20"), ("its own forecast band", "spread")]
+fig, axs = plt.subplots(1, 2, figsize=(7.45, 4.4), sharey=True)
+for ax, h in zip(axs, (1, 5)):
+    clean(ax, grid_y=False); ax.grid(axis="x", color=GRID, lw=0.8)
+    yy = np.arange(len(rows))[::-1]; bh = 0.36
+    for k, (model, col) in enumerate((("timesfm", BLUE), ("chronos", VIOLET))):
+        v = [sp(h, model, vs) for _, vs in rows]
+        ys = yy + (0.5 - k) * (bh + 0.03)
+        ax.barh(ys, v, bh, color=col, zorder=3, label="TimesFM-3" if model == "timesfm" else "Chronos-2")
+        for yv, vv in zip(ys, v):
+            ax.text(vv + (0.03 if vv >= 0 else -0.03), yv, f"{vv:+.2f}".replace("-", "\u2212"), ha="left" if vv >= 0 else "right", va="center", fontsize=12, color=INK, fontweight="bold")
+    ax.axvline(0, color=INK, lw=1.2, zorder=4)
+    ax.set_xlim(-1.12, 0.95); ax.set_xticks([-0.5, 0, 0.5])
+    ax.set_xticklabels(["\u22120.5", "0", "+0.5"], fontsize=12)
+    ax.set_title("h=1, tomorrow" if h == 1 else "h=5, next 5 days", fontsize=14, color=INK, fontweight="bold", loc="left")
+axs[0].set_yticks(np.arange(len(rows))[::-1]); axs[0].set_yticklabels([r[0].replace(" ", "\n", 1) if i < 3 else "its own\nforecast band" for i, r in enumerate(rows)], fontsize=12, color=INK)
+hd, lb = axs[0].get_legend_handles_labels()
+fig.legend(hd, lb, loc="upper right", ncol=2, frameon=False, fontsize=13, labelcolor=INK, bbox_to_anchor=(1.0, 1.0), columnspacing=1.4, handlelength=1.2)
+fig.supxlabel("Spearman correlation of the daily score with ...", fontsize=12, color=MUTE, y=0.0)
+fig.tight_layout(rect=(0, 0, 1, 0.92)); fig.savefig(FIG / "timesfm_vs_chronos.png", dpi=DPI); plt.close(fig)
+
+# ---------------- slide 15: why the drift layer helped (TIMESFM_DRIFT.md section 7)
+sa = pd.read_csv(RES / "timesfm_drift_why_h1_single_auc.csv").set_index("feature").auc_test_2019_2025
+rb = pd.read_csv(RES / "timesfm_drift_why_h5_robust_years.csv").set_index("sample")
+fig, (a1_, a2_) = plt.subplots(1, 2, figsize=(6.9, 4.2), gridspec_kw={"width_ratios": [3.1, 1.5]})
+clean(a1_, grid_y=False); a1_.grid(axis="x", color=GRID, lw=0.8)
+feats = [("TimesFM score", "score_logit", BLUE), ("forecast median", "median_return", BLUE), ("forecast band width", "spread_q90q10", BLUE),
+         ("VIX", "VIX", SLATE), ("20-day realized vol", "rv20", SLATE), ("stack-4 (the layer)", "stack-4 (fixed layer)", VIOLET)]
+for i, (lab, key, col) in enumerate(feats):
+    v = sa[key]; yv = len(feats) - 1 - i
+    a1_.barh(yv, v - 0.5, 0.62, left=0.5, color=col, zorder=3)
+    a1_.text(v + 0.002 if v >= 0.5 else v - 0.002, yv, f"{v:.3f}", ha="left" if v >= 0.5 else "right", va="center", fontsize=13, color=INK, fontweight="bold")
+a1_.axvline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
+a1_.set_yticks(range(len(feats))); a1_.set_yticklabels([f[0] for f in feats][::-1], fontsize=13, color=INK)
+a1_.set_xlim(0.465, 0.545); a1_.set_xticks([0.48, 0.50, 0.52]); a1_.tick_params(axis="x", labelsize=12)
+a1_.set_title("h=1: test AUC, one input at a time", fontsize=13, color=INK, fontweight="bold", loc="left")
+clean(a2_); 
+g = [("all\n7 years", rb.loc["all years", "d_auc"], BLUE), ("without\n2022", rb.loc["excl 2022", "d_auc"], VIOLET)]
+for i, (lab, v, col) in enumerate(g):
+    a2_.bar(i, v, 0.62, color=col, zorder=3)
+    a2_.text(i, v + (0.0012 if v >= 0 else -0.0012), f"{v:+.3f}".replace("-", "\u2212"), ha="center", va="bottom" if v >= 0 else "top", fontsize=13, color=INK, fontweight="bold")
+a2_.axhline(0, color=INK, lw=1.2, zorder=4)
+a2_.set_xticks([0, 1]); a2_.set_xticklabels([x[0] for x in g], fontsize=12, color=INK)
+a2_.set_ylim(-0.014, 0.03); a2_.set_yticks([0]); a2_.set_yticklabels(["0"], fontsize=12); a2_.set_xlim(-0.6, 1.6)
+a2_.set_title("h=5: AUC gain", fontsize=13, color=INK, fontweight="bold", loc="left")
+fig.tight_layout(); fig.savefig(FIG / "drift_why.png", dpi=DPI); plt.close(fig)
 print("done")

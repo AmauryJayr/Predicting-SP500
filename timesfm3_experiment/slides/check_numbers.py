@@ -15,7 +15,7 @@ def slide_text(n):
         out.append(" ".join(re.findall(r"<a:t>([^<]*)</a:t>", x)))
     t = " ".join(out)
     return re.sub(r"\s+", " ", t.replace("&amp;", "&").replace("&quot;", '"').replace("&lt;", "<").replace("&gt;", ">"))
-TXT = {n: slide_text(n) for n in range(1, 16)}
+TXT = {n: slide_text(n) for n in range(1, 18)}
 n_ok = n_bad = 0
 def chk(slide, shown, why):
     """`shown` is the text that must appear on the slide; `why` documents the computed value it comes from."""
@@ -150,53 +150,122 @@ chk(12, f"h=5 AUC {rc5.loc['Transformer part only','auc']:.3f} and {rc5.loc['Det
 chk(12, f"({rc5.loc['Detrending-line slope only','auc_2025']:.2f})", "2025 detrending-line slope AUC")
 assert abs(rc5.loc["TimesFM official", "auc"] - level(5, "static")) < 1e-5
 
-print("\n--- slide 13 (drift detail)")
-chk(13, f"stacking at h=1 ({level(1,'static'):.3f} → {auc(S1):.3f})", "static -> stack-4, h=1")
-chk(13, f"recalibration at h=5 ({level(5,'static'):.3f} → {auc(S5):.3f})", "static -> platt-6, h=5")
-chk(13, f"the fixed LR ({auc(F5):.3f})", "fixed LR h=5")
-chk(13, f"the stack is {f3(c(1,'stack','fixed_lr').d_roc_auc)} above the LR", "stack-4 - fixed LR, h=1")
+
+print("\n--- slide 13 (TimesFM vs Chronos-2, raw scores; timesfm_vs_chronos_*.csv)")
+h2h = pd.read_csv(R + "timesfm_vs_chronos_head2head.csv"); h2h = h2h[h2h.comparison == "TimesFM static - Chronos chosen"].set_index("h")
+sb = pd.read_csv(R + "timesfm_vs_chronos_same_bets.csv"); sb = sb[sb.year == "all"].set_index("h")
+tcn = pd.read_csv(R + "timesfm_vs_chronos_trailing_corr.csv"); tcn = tcn[tcn.year == "all"]
+dft = pd.read_csv(R + "timesfm_vs_chronos_drift_features.csv")
+dl = pd.read_csv(R + "timesfm_vs_chronos_drift_layers.csv")
+f2 = lambda v: f"{v:.2f}".replace("-", "−")
+f3s = lambda v: f"{v:+.3f}".replace("-", "−")
+assert abs(h2h.loc[1, "auc_timesfm"] - level(1, "static")) < 1e-5 and abs(h2h.loc[5, "auc_timesfm"] - level(5, "static")) < 1e-5
+assert (h2h.n.loc[1], h2h.n.loc[5]) == (len(L1), len(L5)) == (1759, 1755)
+chk(13, f"TimesFM {h2h.loc[1,'auc_timesfm']:.3f} / {h2h.loc[5,'auc_timesfm']:.3f}, Chronos-2 {h2h.loc[1,'auc_chronos']:.3f} / {h2h.loc[5,'auc_chronos']:.3f}", "head2head.csv, test AUC h=1 / h=5 (TimesFM = static, as in levels CSV; Chronos chosen config)")
+chk(13, f"{f3s(h2h.loc[1,'d_auc'])} [{f3s(h2h.loc[1,'lo'])}, {f3s(h2h.loc[1,'hi'])}]", "TimesFM - Chronos AUC, h=1, bootstrap 95%")
+chk(13, f"{f3s(h2h.loc[5,'d_auc'])} [{f3s(h2h.loc[5,'lo'])}, {f3s(h2h.loc[5,'hi'])}]", "TimesFM - Chronos AUC, h=5, bootstrap 95%")
+assert all(h2h.loc[h, "lo"] < 0 < h2h.loc[h, "hi"] for h in (1, 5))
+chk(13, f"Spearman {f3s(sb.loc[1,'spearman_tfm_vs_chr'])} / {f3s(sb.loc[5,'spearman_tfm_vs_chr'])}", "same_bets.csv, Spearman of the two daily scores")
+chk(13, f"same up/down call on {sb.loc[1,'same_call_share']*100:.1f}% / {sb.loc[5,'same_call_share']*100:.1f}% of days", "same_bets.csv, same_call_share")
+tcv = lambda h, m, vs: tcn[(tcn.h == h) & (tcn.model == m) & (tcn.vs == vs)].spearman.iloc[0]
+spr = lambda h, m: dft[(dft.h == h) & (dft.model == m) & (dft.feature == "spread_q90_q10")].spearman_with_z.iloc[0]
+chk(13, f"5-day: {f2(tcv(5,'timesfm','ret5'))} with the trailing 5-day return", "trailing_corr.csv TimesFM ret5 h=5")
+chk(13, "ignores volatility (about 0)", f"TimesFM vol20 Spearman h=1 {tcv(1,'timesfm','vol20'):+.3f}, h=5 {tcv(5,'timesfm','vol20'):+.3f}")
+assert abs(tcv(1, "timesfm", "vol20")) < 0.03 and abs(tcv(5, "timesfm", "vol20")) < 0.03
+chk(13, f"at h=5 (+{tcv(5,'chronos','ret5'):.2f})", "trailing_corr.csv Chronos ret5 h=5")
+chk(13, f"({f2(tcv(1,'chronos','vol20'))} at h=1, {f2(tcv(5,'chronos','vol20'))} at h=5)", "trailing_corr.csv Chronos vol20")
+# figure values (bars drawn from the same CSVs; rounded as labelled on the figure)
+print("ok       figure bars (Spearman, h=1 / h=5): TimesFM ret1 %+.2f/%+.2f ret5 %+.2f/%+.2f vol20 %+.2f/%+.2f band %+.2f/%+.2f; Chronos ret1 %+.2f/%+.2f ret5 %+.2f/%+.2f vol20 %+.2f/%+.2f band %+.2f/%+.2f" % tuple(
+    x for m in ("timesfm", "chronos") for vs in ("ret1", "ret5", "vol20", "spread") for x in ((tcv(1, m, vs), tcv(5, m, vs)) if vs != "spread" else (spr(1, m), spr(5, m)))))
+dlh = dl[(dl.model == "chronos") & (dl.headline == True)].set_index("h")  # noqa: E712
+assert dlh.loc[1, "layer"] == "stack4_zms_fixed" and dlh.loc[5, "layer"] == "platt6_offset_252_21"
+chk(13, f"h=1 {f3s(dlh.loc[1,'d_vs_static_d_auc'])}", "drift_layers.csv: stack-4 applied to Chronos, h=1 gain over its static")
+chk(13, f"h=5 {dlh.loc[5,'d_vs_static_d_auc']:+.4f}".replace("-", "−"), "drift_layers.csv: platt-6 applied to Chronos, h=5 gain")
+for tx in ("Raw scores, no drift layer", "Chronos-2 from the team's chronos branch", "Exploratory", "controlled swap", "no real difference in skill", "[~20 s]"):
+    chk(13, tx, "text")
+
+print("\n--- slide 15 (why the drift layer helped; TIMESFM_DRIFT.md section 7, timesfm_drift_why_*.csv)")
+w = lambda n: pd.read_csv(R + f"timesfm_drift_why_{n}.csv")
+rep_ = w("repro"); print("ok       repro.csv present (the 'why' script reproduces the headline AUCs):", len(rep_), "rows")
+co = w("h1_coefs").set_index("feature"); sa_ = w("h1_single_auc").set_index("feature").auc_test_2019_2025
+sc = w("h1_spread_correlations"); lrc = w("h1_lr_compare").set_index("model"); bt1 = w("h1_bootstrap")
+rbst = w("h5_robust_years").set_index("sample"); dec = w("h5_decomposition").set_index("method"); sig = w("h5_signals").set_index("signal"); by5 = w("h5_by_year").set_index("year")
+assert abs(sa_["static TimesFM (official)"] - level(1, "static")) < 1e-5 and abs(sa_["stack-4 (fixed layer)"] - auc(S1)) < 1e-5
+assert abs(dec.loc["static", "auc_all"] - level(5, "static")) < 1e-5 and abs(dec.loc["platt-6", "auc_all"] - auc(S5)) < 1e-5
+chk(15, f"(h=1, {level(1,'static'):.3f} → {auc(S1):.3f})", "static -> stack-4")
+chk(15, f"(h=5, {level(5,'static'):.3f} → {auc(S5):.3f})", "static -> platt-6")
+chk(15, f"direction call ({f3s(co.loc['score_logit','coef_standardised'])})", "h1_coefs.csv standardised weight on the logit score")
+chk(15, f"q90−q10, {f3s(co.loc['spread_q90q10','coef_standardised'])})", "h1_coefs.csv standardised weight on q90-q10 spread")
+assert co.loc["spread_q90q10", "coef_standardised"] > 0 > co.loc["score_logit", "coef_standardised"]
+scp = sc[(sc.period == "2019-2025")].set_index("pair").spearman
+chk(15, f"Spearman {scp['spread vs VIX']:.2f} with the VIX", "h1_spread_correlations.csv, test period")
+chk(15, f"{scp['spread vs rv20']:.2f} with 20-day realized vol", "h1_spread_correlations.csv, test period")
+r_ = bt1[(bt1.A == "stack-4") & (bt1.B == "LR[VIX]")].iloc[0]
+chk(15, f"minus an LR on the VIX: {f3s(r_.d_auc)} [{f3s(r_.lo)}, {f3s(r_.hi)}]", "h1_bootstrap.csv, stack-4 - LR[VIX]"); assert r_.lo < 0 < r_.hi
+chk(15, f"({dec.loc['static','auc_within_block']:.3f} for both)", "h5_decomposition.csv within-block AUC (static = platt-6)")
+assert abs(dec.loc["static", "auc_within_block"] - dec.loc["platt-6", "auc_within_block"]) < 1e-9
+chk(15, f"(mean {f2(by5.loc[2022,'mean_offset'])})", "h5_by_year.csv, 2022 mean offset")
+assert by5.mean_offset.idxmin() == 2022
+chk(15, f"gets the same {sig.loc['z minus trailing-252 mean z (21-row refresh; no labels used)','test_auc']:.3f}", "h5_signals.csv, score minus its trailing-252 mean, no labels")
+assert f"{sig.loc['z minus trailing-252 mean z (21-row refresh; no labels used)','test_auc']:.3f}" == f"{auc(S5):.3f}"  # same 21-row refresh schedule as platt-6
+print("ok       (daily-refreshed no-label version: %.3f; the slide quotes the 21-row-refresh version, same schedule as platt-6)" % sig.loc['z minus trailing-252 mean z (daily; no labels used)','test_auc'])
+# figure: single-feature AUCs and h=5 gain with / without 2022
+print("ok       figure bars h=1 test AUC: score %.3f, median %.3f, band %.3f, VIX %.3f, rv20 %.3f, stack-4 %.3f; h=5 gain all years %+.3f, without 2022 %+.3f" % (
+    sa_["score_logit"], sa_["median_return"], sa_["spread_q90q10"], sa_["VIX"], sa_["rv20"], sa_["stack-4 (fixed layer)"], rbst.loc["all years", "d_auc"], rbst.loc["excl 2022", "d_auc"]))
+assert f"{rbst.loc['all years','d_auc']:+.3f}" == "+0.022" and f"{rbst.loc['excl 2022','d_auc']:+.3f}" == "-0.006"
+chk(15, f"without 2022 the gain is {f3s(rbst.loc['excl 2022','d_auc'])}", "h5_robust_years.csv: platt-6 - static AUC without 2022")
+for tx in ("Exploratory", "it did not fix the direction call", "volatility gauge", "2022 bear year", "[~22 s]"):
+    chk(15, tx, "text")
+
+print("\n--- slide 14 (drift detail)")
+chk(14, f"stacking at h=1 ({level(1,'static'):.3f} → {auc(S1):.3f})", "static -> stack-4, h=1")
+chk(14, f"recalibration at h=5 ({level(5,'static'):.3f} → {auc(S5):.3f})", "static -> platt-6, h=5")
+chk(14, f"the fixed LR ({auc(F5):.3f})", "fixed LR h=5")
+chk(14, f"the stack is {f3(c(1,'stack','fixed_lr').d_roc_auc)} above the LR", "stack-4 - fixed LR, h=1")
 gains = [c(1, "stack", "static").d_roc_auc, c(5, "platt", "static").d_roc_auc]
 assert max(gains) < 0.05
-chk(13, "at most 0.04", f"largest used gain {max(gains):.3f}")
+chk(14, "at most 0.04", f"largest used gain {max(gains):.3f}")
 import json
 ch = json.load(open(R + "timesfm_drift_choices.json"))["chosen"]
 gain = {k: v["mean_d_auc"] for k, v in ch.items()}
 assert max((k for k in gain if k.startswith("h1.")), key=gain.get) == "h1.stack" and max((k for k in gain if k.startswith("h5.")), key=gain.get) == "h5.platt"
 print("ok       largest 2015-2018 gain: h1.stack %.4f, h5.platt %.4f (max of their horizon's families)" % (gain["h1.stack"], gain["h5.platt"]))
 
-print("\n--- slide 14 (VIX on top of the drift layer; baseline = TimesFM + drift layer)")
+print("\n--- slide 16 (VIX on top of the drift layer; baseline = TimesFM + drift layer)")
 vx = pd.read_csv(R + "timesfm_vixdrift_test_levels.csv")
 vc = pd.read_csv(R + "timesfm_vixdrift_test_comparisons.csv")
 v = lambda h, role: vx[(vx.horizon == h) & (vx.role == role)].roc_auc.iloc[0]
-# the baseline D0 is the drift layer of slides 7-13
+# the baseline D0 is the drift layer of slides 5-15
 assert abs(v(1, "d0") - auc(S1)) < 1e-5 and abs(v(5, "d0") - auc(S5)) < 1e-5
-chk(14, f"Baseline AUC: {v(1,'d0'):.3f} (h=1) and {v(5,'d0'):.3f} (h=5)", "D0 = stack-4 (h=1), platt-6 (h=5)")
+chk(16, f"Baseline AUC: {v(1,'d0'):.3f} (h=1) and {v(5,'d0'):.3f} (h=5)", "D0 = stack-4 (h=1), platt-6 (h=5)")
 for h in (1, 5):
     lo, hi = min(v(h, r_) for r_ in ("d1", "d2", "d3")), max(v(h, r_) for r_ in ("d1", "d2", "d3"))
-    chk(14, f"h={h} {lo:.3f}–{hi:.3f}", f"D1-D3 AUC range at h={h}")
+    chk(16, f"h={h} {lo:.3f}–{hi:.3f}", f"D1-D3 AUC range at h={h}")
 prim = vc[vc.family == "primary"]
 assert len(prim) == 8 and (prim[["holm_balanced_acc", "holm_roc_auc"]].min().min() > 0.05)
-chk(14, "None is significantly better than the baseline", f"smallest Holm p over the 8 primary tests per horizon: {prim[['holm_balanced_acc','holm_roc_auc']].min().min():.3f} (> 0.05)")
-chk(14, f"VIX removed from the input: {v(1,'d4'):.3f} (h=1) and {v(5,'d4'):.3f} (h=5)", "D4 = drift layer on the no-VIX forecasts")
+chk(16, "None is significantly better than the baseline", f"smallest Holm p over the 8 primary tests per horizon: {prim[['holm_balanced_acc','holm_roc_auc']].min().min():.3f} (> 0.05)")
+chk(16, f"VIX removed from the input: {v(1,'d4'):.3f} (h=1) and {v(5,'d4'):.3f} (h=5)", "D4 = drift layer on the no-VIX forecasts")
 d4 = prim[prim.name == "d4"]
 assert (d4.holm_roc_auc > 0.05).all() and (d4.holm_balanced_acc > 0.05).all()
 assert all(abs(v(h, r_) - vx[(vx.horizon == h) & (vx.role == r_)].roc_auc.iloc[0]) < 1e-12 for h in (1, 5) for r_ in ("d0", "d4"))
-chk(14, "Baseline: TimesFM + drift layer", "subtitle")
-chk(14, "the few small gains are not significant", "any positive D1-D3 difference vs D0 (or D0 - D4) has Holm p > 0.05: asserted above")
-chk(14, "Exploratory", "footnote")
-chk(14, "[~15 s]", "speaker notes length tag")
+chk(16, "Baseline: TimesFM + drift layer", "subtitle")
+chk(16, "Exploratory", "footnote")
+chk(16, "[~15 s]", "speaker notes length tag")
 ptf = pd.read_pickle(R + "timesfm_vixdrift_test_predictions.pkl")
 assert abs(auc(ptf[(1, "d0")]) - v(1, "d0")) < 1e-5 and abs(auc(ptf[(5, "d4")]) - v(5, "d4")) < 1e-5
 assert len(ptf[(1, "d0")]) == 1759 and len(ptf[(5, "d0")]) == 1755
-print("ok       slide 14 numbers recomputed from timesfm_vixdrift_test_predictions.pkl (D0, D4) and match the levels CSV to 1e-5")
+print("ok       slide 16 numbers recomputed from timesfm_vixdrift_test_predictions.pkl (D0, D4) and match the levels CSV to 1e-5")
 
-print("\n--- slide 15 (bottom line)")
-chk(15, f"AUC {auc(S1):.2f} (h=1) and {auc(S5):.2f} (h=5)", "stack-4, platt-6")
-chk(15, "at h=1 (0.51)", f"fixed LR h=1 {auc(F1):.3f}")
-chk(15, "at h=5 (0.54)", f"fixed LR h=5 {auc(F5):.3f}")
-chk(15, f"2020 ({d(2020,5).auc:.2f}), 2022 ({d(2022,5).auc:.2f}), 2025 ({d(2025,5).auc:.2f})", "h=5 weak years")
+print("\n--- slide 17 (bottom line)")
+chk(17, f"AUC {auc(S1):.2f} (h=1) and {auc(S5):.2f} (h=5)", "stack-4, platt-6")
+chk(17, "at h=1 (0.51)", f"fixed LR h=1 {auc(F1):.3f}")
+chk(17, "at h=5 (0.54)", f"fixed LR h=5 {auc(F5):.3f}")
+chk(17, f"2020 ({d(2020,5).auc:.2f}), 2022 ({d(2022,5).auc:.2f}), 2025 ({d(2025,5).auc:.2f})", "h=5 weak years")
 
 print("\n--- slide 3 worked example (made-up quantiles, unchanged)")
+assert "331M" not in TXT[3] and "trillion" not in TXT[3] and "1 trillion" not in TXT[3], "slide 3 must not repeat slide 2"
+print("ok       slide 3: the two repeated bullets (331M parameters, 1 trillion points) are gone; slide 2 keeps them")
+assert "331M" in TXT[2] and "1T+" in TXT[2]
 q40, q50 = 597, 601
 lower = 0.40 + (600 - q40) / (q50 - q40) * 0.10
 chk(3, "about 47.5% chance of ending lower", f"interpolated {lower:.3f}"); assert abs(lower - 0.475) < 1e-9

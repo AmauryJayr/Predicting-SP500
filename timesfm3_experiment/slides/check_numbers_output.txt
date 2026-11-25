@@ -92,34 +92,75 @@ ok   slide 11  '−19%'                                            <- 2025 max f
 ok   slide 12  'h=5 AUC 0.480 and 0.470 (official 0.459)'        <- transformer part, detrending-line slope, official
 ok   slide 12  '(0.38)'                                          <- 2025 detrending-line slope AUC
 
---- slide 13 (drift detail)
-ok   slide 13  'stacking at h=1 (0.482 → 0.524)'                 <- static -> stack-4, h=1
-ok   slide 13  'recalibration at h=5 (0.459 → 0.481)'            <- static -> platt-6, h=5
-ok   slide 13  'the fixed LR (0.536)'                            <- fixed LR h=5
-ok   slide 13  'the stack is +0.017 above the LR'                <- stack-4 - fixed LR, h=1
-ok   slide 13  'at most 0.04'                                    <- largest used gain 0.043
+--- slide 13 (TimesFM vs Chronos-2, raw scores; timesfm_vs_chronos_*.csv)
+ok   slide 13  'TimesFM 0.482 / 0.459, Chronos-2 0.477 / 0.479'  <- head2head.csv, test AUC h=1 / h=5 (TimesFM = static, as in levels CSV; Chronos chosen config)
+ok   slide 13  '+0.005 [−0.033, +0.043]'                         <- TimesFM - Chronos AUC, h=1, bootstrap 95%
+ok   slide 13  '−0.019 [−0.087, +0.044]'                         <- TimesFM - Chronos AUC, h=5, bootstrap 95%
+ok   slide 13  'Spearman −0.003 / −0.048'                        <- same_bets.csv, Spearman of the two daily scores
+ok   slide 13  'same up/down call on 47.6% / 50.1% of days'      <- same_bets.csv, same_call_share
+ok   slide 13  '5-day: −0.23 with the trailing 5-day return'     <- trailing_corr.csv TimesFM ret5 h=5
+ok   slide 13  'ignores volatility (about 0)'                    <- TimesFM vol20 Spearman h=1 +0.015, h=5 +0.019
+ok   slide 13  'at h=5 (+0.60)'                                  <- trailing_corr.csv Chronos ret5 h=5
+ok   slide 13  '(−0.61 at h=1, −0.36 at h=5)'                    <- trailing_corr.csv Chronos vol20
+ok       figure bars (Spearman, h=1 / h=5): TimesFM ret1 +0.07/-0.05 ret5 -0.16/-0.23 vol20 +0.02/+0.02 band -0.03/-0.07; Chronos ret1 -0.06/+0.28 ret5 +0.11/+0.60 vol20 -0.61/-0.36 band -0.72/-0.59
+ok   slide 13  'h=1 −0.009'                                      <- drift_layers.csv: stack-4 applied to Chronos, h=1 gain over its static
+ok   slide 13  'h=5 −0.0003'                                     <- drift_layers.csv: platt-6 applied to Chronos, h=5 gain
+ok   slide 13  'Raw scores, no drift layer'                      <- text
+ok   slide 13  "Chronos-2 from the team's chronos branch"        <- text
+ok   slide 13  'Exploratory'                                     <- text
+ok   slide 13  'controlled swap'                                 <- text
+ok   slide 13  'no real difference in skill'                     <- text
+ok   slide 13  '[~20 s]'                                         <- text
+
+--- slide 15 (why the drift layer helped; TIMESFM_DRIFT.md section 7, timesfm_drift_why_*.csv)
+ok       repro.csv present (the 'why' script reproduces the headline AUCs): 4 rows
+ok   slide 15  '(h=1, 0.482 → 0.524)'                            <- static -> stack-4
+ok   slide 15  '(h=5, 0.459 → 0.481)'                            <- static -> platt-6
+ok   slide 15  'direction call (−0.003)'                         <- h1_coefs.csv standardised weight on the logit score
+ok   slide 15  'q90−q10, +0.046)'                                <- h1_coefs.csv standardised weight on q90-q10 spread
+ok   slide 15  'Spearman 0.80 with the VIX'                      <- h1_spread_correlations.csv, test period
+ok   slide 15  '0.86 with 20-day realized vol'                   <- h1_spread_correlations.csv, test period
+ok   slide 15  'minus an LR on the VIX: +0.018 [−0.007, +0.042]'  <- h1_bootstrap.csv, stack-4 - LR[VIX]
+ok   slide 15  '(0.522 for both)'                                <- h5_decomposition.csv within-block AUC (static = platt-6)
+ok   slide 15  '(mean −0.51)'                                    <- h5_by_year.csv, 2022 mean offset
+ok   slide 15  'gets the same 0.481'                             <- h5_signals.csv, score minus its trailing-252 mean, no labels
+ok       (daily-refreshed no-label version: 0.482; the slide quotes the 21-row-refresh version, same schedule as platt-6)
+ok       figure bars h=1 test AUC: score 0.482, median 0.491, band 0.520, VIX 0.506, rv20 0.507, stack-4 0.524; h=5 gain all years +0.022, without 2022 -0.006
+ok   slide 15  'without 2022 the gain is −0.006'                 <- h5_robust_years.csv: platt-6 - static AUC without 2022
+ok   slide 15  'Exploratory'                                     <- text
+ok   slide 15  'it did not fix the direction call'               <- text
+ok   slide 15  'volatility gauge'                                <- text
+ok   slide 15  '2022 bear year'                                  <- text
+ok   slide 15  '[~22 s]'                                         <- text
+
+--- slide 14 (drift detail)
+ok   slide 14  'stacking at h=1 (0.482 → 0.524)'                 <- static -> stack-4, h=1
+ok   slide 14  'recalibration at h=5 (0.459 → 0.481)'            <- static -> platt-6, h=5
+ok   slide 14  'the fixed LR (0.536)'                            <- fixed LR h=5
+ok   slide 14  'the stack is +0.017 above the LR'                <- stack-4 - fixed LR, h=1
+ok   slide 14  'at most 0.04'                                    <- largest used gain 0.043
 ok       largest 2015-2018 gain: h1.stack 0.0199, h5.platt 0.0118 (max of their horizon's families)
 
---- slide 14 (VIX on top of the drift layer; baseline = TimesFM + drift layer)
-ok   slide 14  'Baseline AUC: 0.524 (h=1) and 0.481 (h=5)'       <- D0 = stack-4 (h=1), platt-6 (h=5)
-ok   slide 14  'h=1 0.463–0.521'                                 <- D1-D3 AUC range at h=1
-ok   slide 14  'h=5 0.474–0.486'                                 <- D1-D3 AUC range at h=5
-ok   slide 14  'None is significantly better than the baseline'  <- smallest Holm p over the 8 primary tests per horizon: 1.000 (> 0.05)
-ok   slide 14  'VIX removed from the input: 0.530 (h=1) and 0.479 (h=5)'  <- D4 = drift layer on the no-VIX forecasts
-ok   slide 14  'Baseline: TimesFM + drift layer'                 <- subtitle
-ok   slide 14  'the few small gains are not significant'         <- any positive D1-D3 difference vs D0 (or D0 - D4) has Holm p > 0.05: asserted above
-ok   slide 14  'Exploratory'                                     <- footnote
-ok   slide 14  '[~15 s]'                                         <- speaker notes length tag
-ok       slide 14 numbers recomputed from timesfm_vixdrift_test_predictions.pkl (D0, D4) and match the levels CSV to 1e-5
+--- slide 16 (VIX on top of the drift layer; baseline = TimesFM + drift layer)
+ok   slide 16  'Baseline AUC: 0.524 (h=1) and 0.481 (h=5)'       <- D0 = stack-4 (h=1), platt-6 (h=5)
+ok   slide 16  'h=1 0.463–0.521'                                 <- D1-D3 AUC range at h=1
+ok   slide 16  'h=5 0.474–0.486'                                 <- D1-D3 AUC range at h=5
+ok   slide 16  'None is significantly better than the baseline'  <- smallest Holm p over the 8 primary tests per horizon: 1.000 (> 0.05)
+ok   slide 16  'VIX removed from the input: 0.530 (h=1) and 0.479 (h=5)'  <- D4 = drift layer on the no-VIX forecasts
+ok   slide 16  'Baseline: TimesFM + drift layer'                 <- subtitle
+ok   slide 16  'Exploratory'                                     <- footnote
+ok   slide 16  '[~15 s]'                                         <- speaker notes length tag
+ok       slide 16 numbers recomputed from timesfm_vixdrift_test_predictions.pkl (D0, D4) and match the levels CSV to 1e-5
 
---- slide 15 (bottom line)
-ok   slide 15  'AUC 0.52 (h=1) and 0.48 (h=5)'                   <- stack-4, platt-6
-ok   slide 15  'at h=1 (0.51)'                                   <- fixed LR h=1 0.508
-ok   slide 15  'at h=5 (0.54)'                                   <- fixed LR h=5 0.536
-ok   slide 15  '2020 (0.36), 2022 (0.38), 2025 (0.40)'           <- h=5 weak years
+--- slide 17 (bottom line)
+ok   slide 17  'AUC 0.52 (h=1) and 0.48 (h=5)'                   <- stack-4, platt-6
+ok   slide 17  'at h=1 (0.51)'                                   <- fixed LR h=1 0.508
+ok   slide 17  'at h=5 (0.54)'                                   <- fixed LR h=5 0.536
+ok   slide 17  '2020 (0.36), 2022 (0.38), 2025 (0.40)'           <- h=5 weak years
 
 --- slide 3 worked example (made-up quantiles, unchanged)
+ok       slide 3: the two repeated bullets (331M parameters, 1 trillion points) are gone; slide 2 keeps them
 ok   slide  3  'about 47.5% chance of ending lower'              <- interpolated 0.475
 ok   slide  3  'P(up) ≈ 52.5%'                                   <- 0.525
 
-checks passed: 95, failed: 0
+checks passed: 127, failed: 0

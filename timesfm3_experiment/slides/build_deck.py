@@ -142,19 +142,16 @@ text(s, 0.5, 7.0, 9.0, 0.3, ["Source: model card google/timesfm-3.0-pytorch (dat
 
 # ---------------------------------------------------------------- 3 how it works
 s = new_slide("How TimesFM-3 works",
- "[~40 s] TimesFM-3 is a transformer with 331 million parameters, pretrained by Google on over a trillion points of time-series data. "
- "We use it zero-shot: no training on our data. Each day we give it the last 256 trading days of SPY plus 15 related markets. "
+ "[~30 s] Each day we give it the last 256 trading days of SPY plus 15 related markets. "
  "For each of the next 5 days it returns nine quantiles, like this table with made-up numbers. "
  "Take the day-5 row: there is a 10% chance the close is below 585, a 50% chance below 601, and a 90% chance below 616. "
  "Today's close, 600, sits between the 40% and 50% values, three quarters of the way up. "
  "So the chance of ending lower is about 47.5%, and P(up) is about 52.5%. "
  "Our results add the team's drift layer here, before the threshold: stacking for tomorrow, recalibration for 5 days, chosen on 2015 to 2018. Raw, 52.5% is below 58%, so 'not up'.")
 text(s, 0.5, 1.45, 5.2, 4.2, [
-    "Google's pretrained time-series model (TimesFM 3.0, Aug 2026): a transformer with 331M parameters",
-    "Pretrained on over 1 trillion time points; we use it zero-shot (no training on our data)",
     "Input: last 256 trading days of SPY + 15 related series (QQQ, IWM, 9 sector ETFs, TLT, IEF, GLD, VIX)",
     "Output: for each of the next 5 days, 9 quantiles (10%…90%) of the price"],
-    size=18, space_after=14, bullets=True, name="Bullets")
+    size=20, space_after=20, bullets=True, name="Bullets")
 
 # quantile table: the made-up example of the report ("How TimesFM-3 makes a forecast")
 def cell_border(cell, color="D0D0D0", w=12700):
@@ -279,11 +276,11 @@ for yr, sub, notes, spy_t, tf_t, why_t in YEARS:
                                    "Figure and phases: 5-day windows. Year analysis is exploratory (after the test)."], size=11, color=MUTE, name="Footnote")
 
 # ---------------------------------------------------------------- 12 root cause (TIMESFM_ROOT_CAUSE.md)
-def fig_slide(title, notes, png, alt, bullets, answer, foot, sub=None):
-    s = new_slide(title, notes)
+def fig_slide(title, notes, png, alt, bullets, answer, foot, sub=None, title_size=32, fig_w=7.45, tx=8.2, bsize=16, bgap=12, bw=None):
+    s = new_slide(title, notes, title_size=title_size)
     if sub: text(s, 0.5, 0.93, 12.3, 0.35, [sub], size=17, color=MUTE, name="Subtitle")
-    pic(s, FIG / png, 0.45, 1.45, 7.45, alt)
-    text(s, 8.2, 1.55, 4.65, 4.4, bullets, size=16, space_after=12, bullets=True, name="Bullets")
+    pic(s, FIG / png, 0.45, 1.45, fig_w, alt)
+    text(s, tx, 1.55, bw or 4.65, 4.4, bullets, size=bsize, space_after=bgap, bullets=True, name="Bullets")
     text(s, 0.5, 6.1, 12.3, 0.45, [answer], size=18, name="Answer")
     text(s, 0.5, 6.97, 11.2, 0.3, [foot], size=11, color=MUTE, name="Footnote")
     return s
@@ -301,7 +298,21 @@ fig_slide("Is the transformer the root cause?",
  "Exploratory (after the test); bars = 95% block-bootstrap intervals; details in TIMESFM_ROOT_CAUSE.md",
  sub="Analysis of the raw TimesFM score (static, before the drift layer)")
 
-# ---------------------------------------------------------------- 13 drift methods (TIMESFM_DRIFT.md)
+# ---------------------------------------------------------------- 13 TimesFM vs Chronos-2 (TIMESFM_VS_CHRONOS.md)
+fig_slide("TimesFM-3 vs Chronos-2: opposite bets, same result",
+ "[~20 s] How does TimesFM compare with the team's Chronos-2? On the same test days, raw scores, the AUC difference is not real: tomorrow 0.482 against 0.477, five days 0.459 against 0.479, and both intervals include zero. "
+ "But the two make unrelated daily calls; they agree on about half of the days, like two coins. TimesFM leans on turns and ignores volatility. Chronos follows the trend at five days, and says up less often when volatility is high. "
+ "TimesFM's drift layer does not lift Chronos. So: no real difference in skill, different bets, both near a coin flip.",
+ "timesfm_vs_chronos.png", "Grouped horizontal bars: Spearman correlation of the TimesFM-3 and Chronos-2 daily scores with the trailing 1-day return, trailing 5-day return, 20-day realized volatility and the model's own forecast band width, at h=1 and h=5",
+ ["Test AUC (h=1 / h=5): TimesFM 0.482 / 0.459, Chronos-2 0.477 / 0.479. Difference +0.005 [\u22120.033, +0.043] and \u22120.019 [\u22120.087, +0.044].",
+  "Their daily scores are unrelated: Spearman \u22120.003 / \u22120.048; same up/down call on 47.6% / 50.1% of days.",
+  "TimesFM leans on turns (5-day: \u22120.23 with the trailing 5-day return) and ignores volatility (about 0). Chronos follows the trend at h=5 (+0.60) and gives a lower P(up) when volatility is high (\u22120.61 at h=1, \u22120.36 at h=5).",
+  "TimesFM's drift layer does not lift Chronos: h=1 \u22120.009, h=5 \u22120.0003."],
+ [("Answer: ", {"bold": True}), ("no real difference in skill: they bet on different things and both land near a coin flip.", {"bold": True, "color": BLUE})],
+ "Exploratory, computed after the test. A controlled swap (same input for both models) is running and is not on this slide yet. Details in TIMESFM_VS_CHRONOS.md",
+ sub="Raw scores, no drift layer \u00b7 Chronos-2 from the team's chronos branch", title_size=30, bsize=15, bgap=9)
+
+# ---------------------------------------------------------------- 14 drift methods (TIMESFM_DRIFT.md)
 fig_slide("The drift layer: four methods compared",
  "[~10 s] The detail behind the drift layer: four layers on the frozen score, settings chosen on 2015 to 2018, test run once. "
  "Stacking at one day and recalibration at five days had the biggest 2015 to 2018 gain, so they are in this talk. No gain is significant, and at five days the logistic regression is clearly better.",
@@ -313,7 +324,21 @@ fig_slide("The drift layer: four methods compared",
  [("Result: ", {"bold": True}), ("gains over static TimesFM are at most 0.04 and not significant.", {"bold": True, "color": BLUE})],
  "Pre-registered per family; the cross-method pick used 2015–2018 numbers but its rule was set after the test; details in TIMESFM_DRIFT.md")
 
-# ---------------------------------------------------------------- 14 VIX on top of the drift layer (TIMESFM_VIX.md, follow-up section)
+# ---------------------------------------------------------------- 15 why the drift layer helped (TIMESFM_DRIFT.md section 7)
+fig_slide("Why did the drift layer help?",
+ "[~22 s] Why did the drift layer raise AUC? Tomorrow: the layer puts almost no weight on TimesFM's up or down call. It uses the width of TimesFM's forecast band, and that width is mostly a volatility gauge, tracking the VIX at 0.80. "
+ "A wider band gives a slightly higher P(up). Five days: inside each 21-day block the ranking does not change; the whole gain comes from shifting entire periods, mostly 2022, the bear year. Without 2022 the gain is gone. "
+ "So the layer did not fix the direction call.",
+ "drift_why.png", "Left: bar chart of test AUC at h=1 for the TimesFM score, forecast median, forecast band width, VIX, 20-day realized vol and the stack-4 layer, against the 0.5 coin-flip line. Right: h=5 AUC gain with all years (+0.022) and without 2022 (-0.006)",
+ ["Tomorrow (h=1, 0.482 \u2192 0.524): the layer puts almost no weight on TimesFM's direction call (\u22120.003) and bets on the width of its forecast band (q90\u2212q10, +0.046): a wider band \u2192 slightly higher P(up).",
+  "The band width is mostly a volatility gauge: Spearman 0.80 with the VIX, 0.86 with 20-day realized vol. Stack-4 minus an LR on the VIX: +0.018 [\u22120.007, +0.042], not significant.",
+  "5 days (h=5, 0.459 \u2192 0.481): inside each 21-day refit block the ranking is unchanged (0.522 for both); the gain comes from shifting whole periods. In 2022, the bear year, the offset pulled all probabilities down (mean \u22120.51); without 2022 the gain is \u22120.006.",
+  "A version with no labels at all (TimesFM's score minus its own trailing 1-year mean) gets the same 0.481."],
+ [("Answer: ", {"bold": True}), ("it did not fix the direction call: for tomorrow it reads TimesFM's uncertainty as a volatility gauge; for 5 days the gain is the 2022 bear year.", {"bold": True, "color": BLUE})],
+ "Exploratory, computed after the test. Dashed line = 0.5 (coin flip). Details in TIMESFM_DRIFT.md, section 7",
+ sub="TimesFM + drift layer: h=1 stack-4, h=5 recalibration (platt-6)", fig_w=6.8, tx=7.45, bw=5.4, bsize=14, bgap=7)
+
+# ---------------------------------------------------------------- 16 VIX on top of the drift layer (TIMESFM_VIX.md, follow-up section)
 fig_slide("Does the VIX help TimesFM?",
  "[~15 s] Does the VIX help on top of the drift layer? Same baseline as the rest of this talk. We refit the layer when the VIX regime flips, picked the model by VIX regime, "
  "added VIX terms to the layer, and removed the VIX from TimesFM's inputs. No variant is significantly better than the baseline, and removing the VIX changes nothing. "
@@ -327,9 +352,10 @@ fig_slide("Does the VIX help TimesFM?",
  "Exploratory: asked after the TimesFM, drift and VIX test results were known; the drift layer was picked by a rule set after its test. Details in TIMESFM_VIX.md",
  sub="Baseline: TimesFM + drift layer")
 
-# ---------------------------------------------------------------- 15 bottom line
+# ---------------------------------------------------------------- 17 bottom line
 s = new_slide("Bottom line",
- "[~8 s] So: with our drift layer TimesFM is just above a coin flip for tomorrow and below it for five days, no better than the logistic regression. The weak years are still the fall years. We explained part of 2025; 2020 and 2022 stay open.")
+ "[~8 s] So: with our drift layer TimesFM is just above a coin flip for tomorrow and below it for five days, no better than the logistic regression. The weak years are still the fall years. We explained part of 2025; 2020 and 2022 stay open. "
+ "Two exploratory follow-ups: against Chronos-2 there is no real difference, both near a coin flip with unrelated bets; and the drift layer works through volatility at one day and through the 2022 bear year at five days, not through a better direction call.")
 items = ["TimesFM-3 + drift layer: AUC 0.52 (h=1) and 0.48 (h=5). Not significantly above our logistic regression at h=1 (0.51), clearly below it at h=5 (0.54).",
          "Calm years: a coin flip. The weak 5-day years are still the fall years: 2020 (0.36), 2022 (0.38), 2025 (0.40).",
          "Explained: part of raw TimesFM's 2025 (the trend line). 2020 and 2022 stay open. The h=1 stack's AUC comes from the forecast spread, not the up/down score."]
@@ -339,6 +365,9 @@ for i, t in enumerate(items):
     c = shape(s, MSO_SHAPE.OVAL, 0.85, y + 0.37, 0.66, 0.66, BLUE, name=f"Number {i+1}")
     shape_text(c, str(i + 1), 22, color=RGBColor(255, 255, 255), bold=True)
     text(s, 1.85, y + 0.1, 10.6, 1.2, [t], size=20, anchor=MSO_ANCHOR.MIDDLE, name=f"Bullet {i+1}")
+
+text(s, 0.5, 6.62, 11.5, 0.6, [[("Also (exploratory): ", {"bold": True, "color": BLUE}),
+     ("Chronos-2 is no different in skill (unrelated bets, both near a coin flip); the drift layer works through volatility (h=1) and the 2022 bear year (h=5).", {})]], size=16, name="Extra line")
 
 prs.save(HERE / "timesfm3_slides.pptx")
 print("saved", n_slides, "slides")
