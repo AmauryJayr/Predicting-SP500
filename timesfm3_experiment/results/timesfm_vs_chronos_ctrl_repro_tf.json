@@ -1,0 +1,11 @@
+{
+ "n": 30,
+ "dates": [
+  "2013-01-08",
+  "2018-10-05"
+ ],
+ "max_abs_diff_quantiles": 0.0,
+ "mean_abs_diff": 0.0,
+ "sec_per_forecast": 0.032041287422180174,
+ "max_abs_diff_batch10_vs_cache": 0.0
+}

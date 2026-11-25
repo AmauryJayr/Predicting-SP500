@@ -1,0 +1,13 @@
+family,h,contrast,auc_a,auc_b,d_auc,lo,hi,p_two_sided,p_holm
+phase1,1,model effect within L: TFxL - CHxL,0.50068,0.49642,0.00426,-0.02681,0.03279,0.81000,1.00000
+phase1,1,model effect within G: TFxG - CHxG,0.48211,0.47704,0.00506,-0.02393,0.03100,0.75700,1.00000
+phase1,1,input effect within TimesFM: TFxL - TFxG,0.50068,0.48211,0.01857,-0.01179,0.04747,0.23900,1.00000
+phase1,1,input effect within Chronos: CHxL - CHxG,0.49642,0.47704,0.01937,-0.01682,0.05441,0.33100,1.00000
+phase2,1,TFmulti - CHxLcov,0.48186,0.49929,-0.01743,-0.04917,0.01259,0.24900,0.49800
+phase2,1,input/cov effect within Chronos: CHxLcov - CHxL,0.49929,0.49642,0.00287,-0.02223,0.03022,0.82000,
+phase1,5,model effect within L: TFxL - CHxL,0.45293,0.46131,-0.00837,-0.05523,0.03926,0.68700,1.00000
+phase1,5,model effect within G: TFxG - CHxG,0.47532,0.48078,-0.00546,-0.03445,0.02233,0.63000,1.00000
+phase1,5,input effect within TimesFM: TFxL - TFxG,0.45293,0.47532,-0.02238,-0.08531,0.03220,0.42000,1.00000
+phase1,5,input effect within Chronos: CHxL - CHxG,0.46131,0.48078,-0.01947,-0.07478,0.02977,0.37200,1.00000
+phase2,5,TFmulti - CHxLcov,0.45915,0.47819,-0.01903,-0.06731,0.03010,0.49000,0.49800
+phase2,5,input/cov effect within Chronos: CHxLcov - CHxL,0.47819,0.46131,0.01688,-0.03140,0.06345,0.53900,

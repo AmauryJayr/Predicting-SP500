@@ -1,0 +1,18 @@
+{
+ "uni_h1": {
+  "n": 30,
+  "max_abs_diff": 9.685754776000977e-08,
+  "mean_abs_diff": 1.7076643647640825e-09,
+  "max_abs_diff_over_q_iqr_scale": 4.32168136010626e-06
+ },
+ "uni_h5": {
+  "n": 30,
+  "max_abs_diff": 1.2665987014770508e-07,
+  "mean_abs_diff": 6.840878447133397e-09,
+  "max_abs_diff_over_q_iqr_scale": 6.3695675550714685e-06
+ },
+ "L_step1_pred_len1_vs_pred_len5": {
+  "n": 30,
+  "max_abs_diff": 0.0
+ }
+}
