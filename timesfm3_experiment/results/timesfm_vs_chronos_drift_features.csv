@@ -1,0 +1,13 @@
+h,model,feature,auc_test,spearman_with_trailing_vol20,spearman_with_z,mean_test,sd_test
+1,timesfm,z_logit_score,0.48186,0.01546,1.00000,0.21227,0.38311
+1,timesfm,median_forecast_return,0.49065,0.18041,0.94718,0.00143,0.00356
+1,timesfm,spread_q90_q10,0.51958,0.85515,-0.02525,0.02691,0.02143
+1,chronos,z_logit_score,0.47652,-0.60746,1.00000,0.23078,0.15686
+1,chronos,median_forecast_return,0.46850,-0.32121,0.84124,0.00073,0.00050
+1,chronos,spread_q90_q10,0.50605,0.78478,-0.72125,0.01928,0.01013
+5,timesfm,z_logit_score,0.45915,0.01906,1.00000,0.40818,0.57144
+5,timesfm,median_forecast_return,0.46178,0.20134,0.94812,0.00622,0.01401
+5,timesfm,spread_q90_q10,0.51191,0.83244,-0.07455,0.05667,0.03503
+5,chronos,z_logit_score,0.47863,-0.35961,1.00000,0.45991,0.62996
+5,chronos,median_forecast_return,0.48806,-0.15993,0.93719,0.00365,0.00929
+5,chronos,spread_q90_q10,0.51835,0.82807,-0.59402,0.05092,0.02430

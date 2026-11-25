@@ -1,0 +1,5 @@
+h,comparison,n,auc_timesfm,auc_chronos,d_auc,lo,hi,p_one_sided
+1,TimesFM static - Chronos chosen,1759,0.48186,0.47652,0.00534,-0.03318,0.04311,0.38950
+1,TimesFM static - Chronos uni L256,1759,0.48186,0.47735,0.00451,-0.03350,0.04059,0.41550
+5,TimesFM static - Chronos chosen,1755,0.45915,0.47863,-0.01947,-0.08678,0.04428,0.73150
+5,TimesFM static - Chronos uni L256,1755,0.45915,0.48079,-0.02164,-0.08232,0.03338,0.79200
