@@ -230,3 +230,190 @@ PYTHONDONTWRITEBYTECODE=1 python timesfm_drift_study.py report   # tables + slid
 ```
 
 Files: `timesfm_drift_lib.py`, `timesfm_drift_study.py`, `timesfm_drift_preregistration.md`, `results/timesfm_drift_{choices.json, validation_log.csv, timestamps.csv, test_levels.csv, test_comparisons.csv, test_by_year.csv, test_diagnostics.csv, test_predictions.pkl}`, figure `slides/fig/drift_methods.png`. Logs: `results/timesfm_drift_*.log` (git-ignored).
+
+## 7. Exploratory: why the drift layer raised AUC (computed after the test)
+
+**Status: exploratory, not pre-registered.** Everything below was computed after the 2019-2025 test numbers were known, on the same rows, with no model call (cached forecasts only). Nothing here changes a choice of sections 1-6. Script `timesfm_drift_why.py`; tables `results/timesfm_drift_why_*.csv`. About 170 AUC figures and 11 paired bootstrap contrasts were computed; the CIs are the only inference offered, and no claim of significance should be read into a single one of them. The reproduced AUCs match sections 1.4 and 2 exactly (static 0.482 / 0.459, stack-4 0.524, platt-6 0.481; predictions equal to the saved pickle).
+
+### In short
+
+* **h=1 (stack-4, 0.482 -> 0.524).** The layer throws TimesFM's direction call away (standardised weight on the score -0.003, on the median forecast -0.022) and bets on the width of TimesFM's forecast band: a wider q90-q10 spread gives a higher P(up) (+0.046). The spread is mostly a volatility gauge (Spearman 0.80-0.87 with VIX and 0.81-0.86 with 20-day realised vol, both periods), and "more volatile than usual -> a bit more likely to close up" is the whole effect, worth a few AUC points. We cannot say the spread beats a plain VIX or rv20 layer: stack-4 minus LR on rv20 is +0.017 [-0.001, +0.038], minus LR on VIX +0.018 [-0.007, +0.042], and the spread alone (0.520) reaches nearly all of stack-4. The pattern is positive in 5 of 7 test years, and removing 2020 and 2022 raises it (spread AUC 0.553), so those two years are not what drives it.
+* **h=5 (platt-6, 0.459 -> 0.481).** All of the gain is between refit blocks (the within-block ranking is identical pair by pair; 99% of the positive-negative pairs are between blocks) and 105% of it comes from pairs in different calendar years. The offset equals the trailing up-rate minus the trailing mean TimesFM P(up) (correlation 0.9997), and a version with no labels at all, "TimesFM logit minus its own trailing-252 mean", gets the same AUC (0.481). So the layer works by subtracting the slow-moving level of TimesFM's own score, not by learning a base rate (the trailing up-rate alone gets 0.491). Without 2022 the gain is gone (-0.006), and platt-6 is still below 0.5.
+
+### 7.1 h=1: what stack-4 learned
+
+Fit once on 2013-01-02 .. 2018-12-31 (n = 1,510 purged rows, up-rate 0.542). Label (confirmed in `common.Dataset`, and recomputed): up if Close[t+h] / Open[t+1] > 1.
+
+| feature | standardised coef | per raw unit |
+|---|---|---|
+| logit score | -0.003 | -0.009 |
+| median forecast return | -0.022 | -10.7 |
+| spread q90-q10 | **+0.046** | +4.76 |
+| intercept | +0.167 | |
+
+*Plain words:* the layer is basically one number, the width of the forecast band; the direction call gets a near-zero weight. A wider band by one standard deviation (0.0096 in log price, about 1%) moves the odds of an up day only slightly (+0.046 on the log-odds scale, +1.1 percentage points).
+
+Note: the quantiles are of log price, so the spread is already a relative width; there is no separate "spread scaled by price". The scaled variant below divides it by its own trailing-252 mean.
+
+### 7.2 h=1: single-feature AUCs
+
+| feature | AUC 2013-2018 (fit window) | AUC test 2019-2025 |
+|---|---|---|
+| TimesFM logit score | 0.497 | 0.482 |
+| median forecast return | 0.500 | 0.491 |
+| **spread q90-q10** | **0.520** | **0.520** |
+| spread / its trailing-252 mean | 0.518 | 0.510 |
+| VIX level | 0.513 | 0.506 |
+| 20-day realised vol (rv20) | 0.524 | 0.507 |
+| stack-4 (fixed layer) | - | 0.524 |
+
+*Plain words:* with the layer's three inputs, only the width has any ranking power, and it is the same in the fit window and in the test (0.520 and 0.520). If you picked each day's rank by "higher spread = more likely up", you would order a random up day above a random down day 52 times in 100.
+
+Per year (test), AUC of the feature:
+
+| feature | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
+|---|---|---|---|---|---|---|---|
+| spread | 0.556 | 0.452 | 0.585 | 0.563 | 0.477 | 0.561 | 0.551 |
+| VIX | 0.561 | 0.445 | 0.546 | 0.561 | 0.466 | 0.525 | 0.525 |
+| rv20 | 0.531 | 0.455 | 0.555 | 0.531 | 0.488 | 0.540 | 0.540 |
+| stack-4 | 0.572 | 0.474 | 0.582 | 0.538 | 0.491 | 0.599 | 0.548 |
+| static TimesFM | 0.467 | 0.466 | 0.480 | 0.516 | 0.505 | 0.421 | 0.512 |
+
+*Plain words:* in 5 of the 7 years (not 2020, not 2023) the spread, VIX and rv20 all point the same way, and the three move together year by year (they fail in the same two years). Each year has about 250 rows, so a single year's AUC is uncertain by roughly +/-0.04.
+
+### 7.3 h=1: is the spread a volatility proxy?
+
+Spearman correlation of the spread with: VIX 0.867 (2013-18) and 0.801 (2019-25); rv20 0.806 and 0.855; TimesFM score 0.076 and -0.025; median return 0.288 and 0.172. By year the correlation with VIX is 0.62-0.90 and with rv20 0.62-0.92 (`why_h1_spread_correlations.csv`).
+
+Fixed layers fitted once on the same fit window as stack-4 (C = 0.03, standardised), test AUC:
+
+| model | test AUC |
+|---|---|
+| LR[spread] | 0.520 |
+| LR[VIX] | 0.506 |
+| LR[rv20] | 0.507 |
+| LR[spread + VIX] | 0.518 |
+| LR[spread + rv20] | 0.509 |
+| stack-4 (score, median, spread) | 0.524 |
+| spread residualised on VIX (linear / log) | 0.512 / 0.513 |
+| spread residualised on rv20 (linear / log) | 0.521 / 0.518 |
+
+*Plain words:* the spread and the volatility measures are nearly the same ranking of "calm day vs nervous day" (a 0.8-0.9 rank correlation). What is left of the spread after removing VIX still ranks days with AUC 0.512, and after removing rv20 0.521, i.e. the part the spread has beyond them is small and within noise.
+
+Paired moving-block bootstrap (the study's `paired_bootstrap`, 2000 draws, block 20, seed 42), difference in test AUC:
+
+| A | B | A - B | 95% CI | one-sided p |
+|---|---|---|---|---|
+| stack-4 | LR[rv20] | +0.017 | [-0.001, +0.038] | 0.029 |
+| stack-4 | LR[VIX] | +0.018 | [-0.007, +0.042] | 0.082 |
+| stack-4 | LR[spread] | +0.005 | [-0.012, +0.024] | 0.277 |
+| stack-4 | LR[spread + VIX] | +0.006 | [-0.012, +0.026] | 0.239 |
+| LR[spread] | LR[rv20] | +0.012 | [+0.001, +0.025] | 0.020 |
+| LR[spread] | static | +0.038 | [-0.002, +0.073] | 0.031 |
+
+*Plain words:* the stack-4 gain over a plain realised-vol or VIX layer is about 2 AUC points, and the CIs touch zero; against the spread alone it is 0.5 point, indistinguishable from nothing. So "the spread is a volatility proxy that carries a small amount of information" fits the data, and "the spread beats VIX" is not established (p-values here are unadjusted, and these are two to six looks at the same 1,759 rows).
+
+### 7.4 h=1: up-rate by quintile and by year
+
+Up-rate by within-period quintile of the feature (about 300 rows in each cell in 2013-18 and 350 in 2019-25, so the standard error of one cell is about 2.7 points):
+
+| spread quintile (low -> high) | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 2013-2018 | 0.536 | 0.500 | 0.525 | 0.587 | 0.560 |
+| 2019-2025 | 0.491 | 0.540 | 0.593 | 0.580 | 0.528 |
+
+| VIX quintile (low -> high) | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 2013-2018 | 0.532 | 0.520 | 0.557 | 0.556 | 0.543 |
+| 2019-2025 | 0.563 | 0.523 | 0.516 | 0.587 | 0.544 |
+
+(rv20 in the CSV: 0.510, 0.536, 0.540, 0.570, 0.553 and 0.517, 0.568, 0.556, 0.551, 0.540.) With cut points fixed on the fit window, 2019-2025 is dominated by the top bins (749 of 1,759 days above the fit window's top spread quintile, 1,057 above its top VIX quintile): the test period is a higher-volatility world than the fit window.
+
+*Plain words:* the relation is a weak upward slope, not a clean monotone one: in 2019-2025 the up-rate is 49% on the calmest fifth of days, 58-59% in the middle-high fifths, and falls back to 53% in the top fifth. The extremes are a few points apart on 350 days each, i.e. one to three standard errors; this is a small effect that an AUC of 0.52 accurately summarises.
+
+Per year, up-rate on days with spread above vs below the fit window's median (`why_h1_year_uprate.csv`): 2019 0.59 vs 0.47, 2020 0.57 vs 0.64, 2021 0.58 vs 0.49, 2022 0.51 vs 0.00 (only 2 days below), 2023 0.59 vs 0.63, 2024 0.56 vs 0.46, 2025 0.54 vs 0.44.
+
+Test AUC after dropping the stress years:
+
+| sample | spread | VIX | rv20 | stack-4 | static |
+|---|---|---|---|---|---|
+| all 2019-2025 | 0.520 | 0.506 | 0.507 | 0.524 | 0.482 |
+| without 2020 | 0.530 | 0.509 | 0.516 | 0.534 | 0.483 |
+| without 2022 | 0.536 | 0.514 | 0.520 | 0.540 | 0.474 |
+| without 2020 and 2022 | 0.553 | 0.520 | 0.534 | 0.557 | 0.474 |
+
+*Plain words:* the layer works in the calmer years (2019, 2021, 2024, 2025) and fails in 2020 (the spread sat above its old median on 220 of 253 days, with a crash and a rebound) and 2023; 2022 contributes little because the spread sat above its old median on 249 of 251 days, so there was nothing to rank. The effect is not manufactured by 2020 or 2022; those years dilute it.
+
+### 7.5 h=5: exact decomposition of platt-6's gain
+
+Static and platt-6 scores are both monotone in the logit score within a refit block (platt-6 adds a constant per block). Blocks are the 84 refit blocks of 21 rows inside the test period (offsets re-derived with `fit_cal`; asserted equal to `run_platt`'s probabilities). AUC = concordant pairs / all (positive, negative) pairs (729,806 pairs).
+
+| | all pairs | within-block pairs (1.0% of pairs) | between-block pairs (99.0%) |
+|---|---|---|---|
+| static | 0.4592 | 0.5219 | 0.4585 |
+| platt-6 | 0.4810 | 0.5219 | 0.4806 |
+| gain (AUC points) | **+0.0219** | **0.0000** | **+0.0219** |
+
+By calendar structure of the pair: same block 1.0% of pairs, gain 0.0000; same year but different block 13.0%, AUC 0.448 -> 0.439, gain -0.0011; different years 86.0%, AUC 0.460 -> 0.487, gain +0.0230.
+
+*Plain words:* inside one 21-day block the offset shifts every day equally, so the order is unchanged (every pair keeps its verdict, verified). Therefore the whole improvement is created by comparing days from different blocks, and almost entirely days from different years: e.g. a down-day in 2022 now sits lower in the ranking than an up-day in 2024 because the offset in 2022 was lower, not because TimesFM said anything about that day.
+
+### 7.6 h=5: what does the offset track?
+
+Over the 84 refit blocks (`why_h5_blocks.csv`, `why_h5_offset_correlations.csv`):
+
+| pair | Pearson | Spearman |
+|---|---|---|
+| offset vs trailing-252 up-rate | +0.688 | +0.652 |
+| offset vs trailing-252 mean TimesFM P(up) | -0.595 | -0.619 |
+| offset vs (trailing up-rate minus mean TimesFM P(up)) | +0.9997 | +0.9995 |
+| offset vs the next block's realised up-rate | +0.085 | +0.057 |
+| trailing-252 mean TimesFM P(up) vs next block's up-rate | -0.122 | -0.102 |
+
+Test AUC of candidate signals (all known at the decision date; 1,755 rows):
+
+| signal | test AUC |
+|---|---|
+| static TimesFM | 0.459 |
+| platt-6 | 0.481 |
+| offset alone (constant within a block) | 0.518 |
+| trailing-252 up-rate, refreshed every 21 rows (no TimesFM) | 0.491 |
+| trailing-252 up-rate, refreshed daily (no TimesFM) | 0.498 |
+| trailing-252 mean TimesFM P(up) | 0.470 |
+| TimesFM logit minus its trailing-252 mean (21-row refresh; **no labels**) | 0.481 |
+| same, refreshed daily | 0.482 |
+
+Paired bootstrap, platt-6 minus B (difference in test AUC):
+
+| B | platt-6 - B | 95% CI | one-sided p |
+|---|---|---|---|
+| static | +0.022 | [+0.001, +0.046] | 0.020 |
+| TimesFM logit minus its trailing-252 mean | -0.0002 | [-0.016, +0.017] | 0.50 |
+| trailing up-rate, 21-row refresh | -0.010 | [-0.052, +0.030] | 0.69 |
+| trailing up-rate, daily | -0.017 | [-0.064, +0.028] | 0.77 |
+| offset alone | -0.037 | [-0.077, -0.0004] | 0.98 |
+
+*Plain words:* a base rate with no TimesFM at all (0.491-0.498) gets as high as platt-6 (0.481), so the gain is not evidence that TimesFM's daily calls got better. The offset is almost exactly "what the last year did minus what TimesFM expected in the last year". Subtracting TimesFM's own trailing average from its score (no labels used) gives the same AUC (0.481), meaning the useful part of the offset is the minus-TimesFM-average part: the slow level of TimesFM's P(up) is anti-informative, since its trailing mean has AUC 0.470 (sign chosen after seeing the test: reversed 0.529), and removing it helps. Within a block, TimesFM's own ordering has AUC 0.522. An example: after a long stretch of TimesFM saying 66% up, the offset is negative (-0.52 in January 2019, when the trailing mean P(up) was 0.66; -0.19 at the end of 2021), pushing all days down a bit.
+
+### 7.7 h=5: per year
+
+| year | rows | up-rate | AUC static | AUC platt-6 | change within year | mean offset | share of total gain from positives of that year |
+|---|---|---|---|---|---|---|---|
+| 2019 | 252 | 0.679 | 0.490 | 0.479 | -0.011 | -0.054 | 14% |
+| 2020 | 253 | 0.632 | 0.377 | 0.363 | -0.014 | +0.153 | 24% |
+| 2021 | 252 | 0.631 | 0.480 | 0.488 | +0.008 | +0.100 | 3% |
+| 2022 | 251 | 0.458 | 0.392 | 0.383 | -0.010 | -0.508 | -62% |
+| 2023 | 250 | 0.620 | 0.507 | 0.472 | -0.035 | +0.132 | 59% |
+| 2024 | 252 | 0.643 | 0.506 | 0.539 | +0.033 | +0.285 | 80% |
+| 2025 | 245 | 0.637 | 0.425 | 0.395 | -0.029 | -0.157 | -19% |
+
+Robustness of the pooled gain to dropping a year: all years +0.022 (0.459 -> 0.481); without 2022 -0.006 (0.455 -> 0.449); without 2020 +0.025; without 2022 and 2024 -0.011.
+
+*Plain words:* inside a year the layer makes the ranking worse in 5 of 7 years (it only helps in 2021 and 2024); the pooled gain exists because the layer ranks different years against each other, and 2022 (down year with up-rate 0.458 and the lowest offset, -0.51) drives it: remove 2022 and the +0.022 turns into -0.006. The "share" column is the attribution of the pair gains to the year of the up-day in the pair and sums to 100%; it shows the gain is not spread evenly (a negative share means that year's up-days lost ranking).
+
+### 7.8 Reading of the two layers, and limits
+
+* The two layers raise AUC for different reasons. At h=1 a feature that is a volatility gauge (the forecast band) carries a small, same-sign signal in both periods; at h=5 the recalibration only moves the whole score up or down between blocks, and its gain depends on one year.
+* **Neither result shows that TimesFM's direction forecast is informative.** The h=1 layer ignores the direction, the h=5 gain is matched by a rule with no labels and no TimesFM beyond its own average, and platt-6 stays below 0.5 (0.481).
+* All differences are of one to three AUC points on 1,755-1,759 overlapping rows; the paired CIs above are the only inference, they were not corrected for the many looks, and the analysis was shaped after the test result was known. Treat the mechanism as a hypothesis consistent with the numbers, not as a tested claim.
+* The "sign chosen after seeing the test" entries (the reversed trailing mean, 0.529) are descriptive only.

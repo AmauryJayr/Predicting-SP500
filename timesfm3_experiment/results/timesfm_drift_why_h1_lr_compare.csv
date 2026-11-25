@@ -1,0 +1,11 @@
+model,test_auc,std_coef,auc_2013_2018,r2_on_fit_window
+LR[spread],0.51958,0.03786,,
+LR[VIX],0.50618,0.03295,,
+LR[rv20],0.50731,0.04737,,
+LR[spread+VIX],0.51822,,,
+LR[spread+rv20],0.50945,,,
+"LR[score,median,spread]=stack-4",0.52448,,,
+spread residualised on VIX,0.51165,,0.50525,0.82241
+spread residualised on log VIX,0.51263,,0.51352,0.80067
+spread residualised on rv20,0.52131,,0.49422,0.59853
+spread residualised on log rv20,0.51834,,0.49809,0.67251

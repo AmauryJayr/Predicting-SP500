@@ -1,0 +1,10 @@
+a,b,pearson,spearman,n_blocks
+offset,trailing252_up_rate,0.68767,0.65187,84
+offset,trailing252_mean_timesfm_pup,-0.59498,-0.61909,84
+offset,trailing252_mean_logit,-0.60305,-0.63096,84
+trailing252_up_rate,trailing252_mean_timesfm_pup,0.17392,0.10999,84
+offset,next_block_up_rate_realised,0.08494,0.05663,84
+trailing252_up_rate,next_block_up_rate_realised,-0.00720,-0.04911,84
+trailing252_mean_timesfm_pup,next_block_up_rate_realised,-0.12217,-0.10175,84
+block_mean_logit,next_block_up_rate_realised,-0.23103,-0.26237,84
+offset,trailing up-rate minus mean TimesFM P(up),0.99972,0.99945,84

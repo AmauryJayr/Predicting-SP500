@@ -1,0 +1,6 @@
+A,B,d_auc,lo,hi,p_one_sided
+platt-6,static,0.02189,0.00101,0.04644,0.01950
+platt-6,z minus trailing-252 mean z (21-row refresh),-0.00022,-0.01599,0.01690,0.49650
+platt-6,"trailing-252 up-rate, 21-row refresh",-0.01007,-0.05201,0.02999,0.68700
+platt-6,"trailing-252 up-rate, daily",-0.01721,-0.06373,0.02770,0.76900
+platt-6,offset alone,-0.03664,-0.07748,-0.00037,0.97600

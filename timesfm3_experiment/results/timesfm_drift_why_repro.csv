@@ -1,0 +1,5 @@
+h,method,n,auc,matches_saved_pickle
+1,static,1759,0.48186,True
+1,stack-4,1759,0.52448,True
+5,static,1755,0.45915,True
+5,platt-6,1755,0.48104,True

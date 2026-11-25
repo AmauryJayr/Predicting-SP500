@@ -1,0 +1,6 @@
+feature,coef_standardised,coef_per_raw_unit,train_mean,train_sd
+score_logit,-0.00335,-0.00917,0.23026,0.36515
+median_return,-0.02231,-10.65836,0.00107,0.00209
+spread_q90q10,0.04575,4.75524,0.01801,0.00962
+intercept,0.16748,,,
+fit window 2013-01-02 .. 2018-12-31 n=1510 up_rate=0.5417,,,,

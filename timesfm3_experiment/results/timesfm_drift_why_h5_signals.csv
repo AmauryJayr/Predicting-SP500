@@ -1,0 +1,12 @@
+signal,test_auc
+static TimesFM,0.45915
+platt-6 (TimesFM + offset),0.48104
+offset alone (block-constant),0.51768
+"trailing-252 up-rate, refreshed every 21 rows",0.49111
+"trailing-252 up-rate, refreshed daily",0.49825
+"trailing-252 mean TimesFM P(up), 21-row refresh",0.46954
+TimesFM logit z alone,0.45915
+constant offset: block mean of z (z blockwise demeaned),0.51388
+z minus trailing-252 mean z (21-row refresh; no labels used),0.48126
+z minus trailing-252 mean z (daily; no labels used),0.48176
+minus trailing-252 mean z alone (sign chosen after seeing test),0.52946

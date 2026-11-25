@@ -1,0 +1,4 @@
+pair_class,share_of_pairs,auc_static,auc_platt6,gain_auc_pts_(share_weighted)
+same block,0.01007,0.52192,0.52192,0.00000
+"same year, different block",0.13022,0.44788,0.43912,-0.00114
+different years,0.85976,0.46012,0.48691,0.02303

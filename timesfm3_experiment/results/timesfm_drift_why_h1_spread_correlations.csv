@@ -1,0 +1,23 @@
+period,pair,spearman
+2013-2018,spread vs VIX,0.86653
+2013-2018,spread vs rv20,0.80588
+2013-2018,spread vs score_logit,0.07587
+2013-2018,spread vs median_return,0.28836
+2019-2025,spread vs VIX,0.80087
+2019-2025,spread vs rv20,0.85515
+2019-2025,spread vs score_logit,-0.02525
+2019-2025,spread vs median_return,0.17177
+2019,spread vs VIX,0.85669
+2019,spread vs rv20,0.80457
+2020,spread vs VIX,0.90050
+2020,spread vs rv20,0.91797
+2021,spread vs VIX,0.77639
+2021,spread vs rv20,0.62476
+2022,spread vs VIX,0.61593
+2022,spread vs rv20,0.61682
+2023,spread vs VIX,0.76289
+2023,spread vs rv20,0.85241
+2024,spread vs VIX,0.63142
+2024,spread vs rv20,0.68046
+2025,spread vs VIX,0.80754
+2025,spread vs rv20,0.81638

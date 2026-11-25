@@ -1,0 +1,9 @@
+feature,auc_2013_2018,auc_test_2019_2025
+score_logit,0.49657,0.48186
+median_return,0.49984,0.49065
+spread_q90q10,0.52022,0.51958
+spread_over_trailing252_mean,0.51759,0.50977
+VIX,0.51275,0.50618
+rv20,0.52418,0.50731
+stack-4 (fixed layer),,0.52448
+static TimesFM (official),,0.48186

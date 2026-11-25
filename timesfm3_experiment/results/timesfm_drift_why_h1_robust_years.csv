@@ -1,0 +1,29 @@
+feature,sample,n,auc
+spread_q90q10,all,1759,0.51958
+spread_q90q10,excl 2020,1506,0.52968
+spread_q90q10,excl 2022,1508,0.53634
+spread_q90q10,excl 2020+2022,1255,0.55320
+VIX,all,1759,0.50618
+VIX,excl 2020,1506,0.50869
+VIX,excl 2022,1508,0.51402
+VIX,excl 2020+2022,1255,0.52038
+rv20,all,1759,0.50731
+rv20,excl 2020,1506,0.51557
+rv20,excl 2022,1508,0.51997
+rv20,excl 2020+2022,1255,0.53388
+median_return,all,1759,0.49065
+median_return,excl 2020,1506,0.49215
+median_return,excl 2022,1508,0.48252
+median_return,excl 2020+2022,1255,0.48288
+score_logit,all,1759,0.48186
+score_logit,excl 2020,1506,0.48330
+score_logit,excl 2022,1508,0.47373
+score_logit,excl 2020+2022,1255,0.47429
+stack-4,all,1759,0.52448
+static,all,1759,0.48186
+stack-4,excl 2020,1506,0.53441
+static,excl 2020,1506,0.48330
+stack-4,excl 2022,1508,0.54001
+static,excl 2022,1508,0.47373
+stack-4,excl 2020+2022,1255,0.55671
+static,excl 2020+2022,1255,0.47429
