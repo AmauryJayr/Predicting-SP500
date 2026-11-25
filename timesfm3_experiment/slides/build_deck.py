@@ -309,7 +309,7 @@ fig_slide("TimesFM-3 vs Chronos-2: opposite bets, same result",
   "TimesFM leans on turns (5-day: \u22120.23 with the trailing 5-day return) and ignores volatility (about 0). Chronos follows the trend at h=5 (+0.60) and gives a lower P(up) when volatility is high (\u22120.61 at h=1, \u22120.36 at h=5).",
   "TimesFM's drift layer does not lift Chronos: h=1 \u22120.009, h=5 \u22120.0003."],
  [("Answer: ", {"bold": True}), ("no real difference in skill: they bet on different things and both land near a coin flip.", {"bold": True, "color": BLUE})],
- "Exploratory, computed after the test. A controlled swap (same input for both models) is running and is not on this slide yet. Details in TIMESFM_VS_CHRONOS.md",
+ "Exploratory, after the test. In a controlled swap (same input for both models) the turns-vs-trend lean follows the input (price levels → turns, returns → trend), not the model; AUC unchanged. Details: TIMESFM_VS_CHRONOS.md §7",
  sub="Raw scores, no drift layer \u00b7 Chronos-2 from the team's chronos branch", title_size=30, bsize=15, bgap=9)
 
 # ---------------------------------------------------------------- 14 drift methods (TIMESFM_DRIFT.md)
