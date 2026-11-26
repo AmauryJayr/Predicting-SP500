@@ -1,0 +1,3 @@
+setting,n,max_abs_diff,sec_per_forecast
+multi (SPY + 15 side series) vs cache multi_ctx256,30,0.0,0.4115811665852865
+SPY only vs cache tf_L_TEST,30,0.0,0.03805201848347982

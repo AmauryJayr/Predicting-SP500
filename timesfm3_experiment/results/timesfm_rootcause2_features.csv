@@ -1,0 +1,24 @@
+feature,group,close_only_qualifies,needs
+spy_ret_1d,SPY short-term,True,"Close, 2 days"
+spy_ret_5d,SPY short-term,True,"Close, 6 days"
+spy_ret_20d,SPY short-term,True,"Close, 21 days"
+spy_rsi14,SPY short-term,True,Close; exponentially weighted from the start of the full history (approx. 256-day window only)
+spy_ret_60d,SPY long-term/trend,True,"Close, 61 days"
+spy_ret_250d,SPY long-term/trend,True,"Close, 251 days"
+spy_px_vs_sma50,SPY long-term/trend,True,"Close, 50 days"
+spy_px_vs_sma200,SPY long-term/trend,True,"Close, 200 days"
+spy_dist_252d_high,SPY long-term/trend,True,"Close, 252 days"
+spy_vol_20d,volatility,True,"Close, 21 days"
+spy_vol_ratio_5_60,volatility,True,"Close, 61 days"
+vix_level,VIX,False,other assets
+vix_z60,VIX,False,other assets
+vix_minus_rv20,VIX,False,other assets
+vix_log_chg_5d,VIX,False,other assets
+sector_breadth_above_sma50,cross-asset,False,other assets
+sector_dispersion_5d,cross-asset,False,other assets
+corr_spy_tlt_60d,cross-asset,False,other assets
+tlt_ret_20d,cross-asset,False,other assets
+iwm_minus_spy_ret_20d,cross-asset,False,other assets
+xly_minus_xlp_ret_20d,cross-asset,False,other assets
+spy_overnight_ret,Open-based,False,Open (not in TimesFM input)
+spy_intraday_ret,Open-based,False,Open (not in TimesFM input)

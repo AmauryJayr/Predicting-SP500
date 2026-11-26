@@ -1,0 +1,3 @@
+h,n_test,n_train,train_first,train_last_label_end,fixed_lr_auc_run_spec,subset_path_auc_all23,timesfm_static_auc
+1,1759,2769,2008-01-02,2019-01-02,0.50759,0.50759,0.48186
+5,1755,2765,2008-01-02,2019-01-02,0.53555,0.53555,0.45915

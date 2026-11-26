@@ -1,0 +1,6 @@
+{
+ "design_file": "timesfm_behaviour_plan.md",
+ "design_sha256": "97cdc1d9714ef1aa698fa17c89386a4dd3e45ddb6d62ce416ef49cd40216d1b5",
+ "locked_utc": "2026-11-25T23:19:13+00:00",
+ "note": "exploratory; test period already seen in earlier studies; locked before any new forecast of this study was generated (the 64-forecast speed benchmark and its equality check against the caches were run before locking and are not used in any result)"
+}

@@ -194,3 +194,128 @@ Outputs: `results/timesfm_rootcause_{repro,components,subsets,sizes,baselines,de
 - Two pretrained models with opposite habits both end near 0.5, consistent with SPY direction being close to unpredictable from past prices (not tested directly).
 
 **Speaker notes (about 15 seconds):** "We split the official forecast into the transformer's part and the detrending line's part. Neither is significantly below one half, and removing the detrending changes nothing overall. The weak years, 2020 and 2022, sit in the network's output, but simple extrapolators score just as low there. So we cannot show a transformer defect; the simplest reading is that extrapolating past moves does not predict SPY direction."
+
+
+## 8. Exploratory: what does our simple model see that TimesFM does not?
+
+**Exploratory, after the test.** The 2019-2025 test period was already seen in earlier studies, so nothing below is a pre-registered confirmation. The plan was written and hashed before any number of this study was computed (`timesfm_rootcause2_plan.md`, `results/timesfm_rootcause2_lock.json`). Only cached forecasts and the team's own code were used; TimesFM and Chronos were not run. "AUC" is the chance that the model gives a higher score to a day that really went up than to a day that went down: 0.5 is a coin flip, 1.0 is perfect.
+
+### In short
+
+- **Our simple model is not clearly better than a coin flip either.** Its test AUC is 0.508 (tomorrow) and 0.536 (next 5 days); the 95% ranges (0.481 to 0.532 and 0.493 to 0.582) both contain 0.5. TimesFM scores 0.482 and 0.459. The gap is +0.026 (range -0.011 to 0.062) for tomorrow and +0.076 (0.020 to 0.137) for 5 days; after correcting for the 12 questions in the main family, neither gap is shown (corrected p = 1.0 and 0.12).
+- **Price history of SPY alone gives the trained model nothing.** The 11 features that use only SPY's closing prices (the kind of data TimesFM's 256-day window holds) score 0.497 and 0.491. So the shortfall is not "TimesFM misses something a trained model finds in SPY's own prices": the trained model finds nothing there either.
+- **The small 5-day edge of our model comes from the other assets, not from SPY.** Six features that compare SPY with sector ETFs, bonds and small caps score 0.539 on their own at 5 days. Removing them drops the full model from 0.536 to 0.502; removing any other group moves it by 0.007 or less. The sector ETFs, bonds, small caps and VIX are in TimesFM's input as side series, but we did not test whether TimesFM uses them.
+- **TimesFM adds nothing to those features.** Trained on 2013-2018, the core features score 0.515 / 0.523. Adding TimesFM's three outputs gives 0.518 (+0.003, range -0.002 to 0.008) for tomorrow and 0.514 (-0.009, range -0.016 to -0.003) for 5 days. The 5-day change is small but is below zero even after correction. With a weaker penalty (C=0.03) the 5-day change is 0.000 (range -0.013 to 0.014), so read it as no gain rather than a real loss.
+- **The two models place different bets.** Their daily scores are almost unrelated (rank correlation -0.02 tomorrow, +0.11 at 5 days). At 5 days TimesFM leans against recent gains (correlation with SPY's last 20-day return -0.35); our model's score leans with them (+0.34), though its own weight on that feature is about zero and the lean comes from other features.
+- **Not tested here:** why TimesFM leans the way it does, and whether it uses the side series at all.
+
+### 8.1 Reproduction and the information ceiling
+
+The team's fixed model (logistic regression, C=0.003, 23 core features, trained once on all labels known before 2019: 2,769 rows for tomorrow, 2,765 for 5 days, starting 2008-01-02) was re-run through `run_spec` and through the subset code used below; both give the same numbers: **0.508 / 0.536**. TimesFM static: 0.482 / 0.459. Each row below is the same model, same C, trained once, on a different set of features.
+
+| Features used (count) | Tomorrow AUC (95% range) | corrected p* | Next 5 days AUC (95% range) | corrected p* |
+|---|---|---|---|---|
+| (a) all 23 core | 0.508 (0.481 to 0.532) | 1.00 | 0.536 (0.493 to 0.582) | 1.00 |
+| (b) SPY closing-price only (11) | 0.497 (0.472 to 0.523) | 1.00 | 0.491 (0.451 to 0.538) | 1.00 |
+| (c) all SPY, including opening prices (13) | 0.504 (0.478 to 0.531) | 1.00 | 0.495 (0.456 to 0.539) | 1.00 |
+| (d) VIX group (4) | 0.509 (0.483 to 0.537) | 1.00 | 0.511 (0.474 to 0.555) | 1.00 |
+| (e) other assets group (6) | 0.491 (0.462 to 0.514) | 1.00 | 0.539 (0.492 to 0.581) | 1.00 |
+| (a) minus TimesFM static (paired) | +0.026 (-0.011 to 0.062) | 1.00 | +0.076 (0.020 to 0.137) | 0.12 |
+
+*Test against 0.5 (rows a to e) or against TimesFM (last row), 2,000 moving blocks of max(20, 3h) days, two-sided; Holm correction over these 12 tests (the main family). Raw p for the last row at 5 days is 0.010; the smallest raw p among the others is 0.097.
+
+Which of the 23 core features qualify for (b), checked in `experiments/common.py` (`spy_features`): `spy_ret_1d/5d/20d/60d/250d`, `spy_vol_20d`, `spy_vol_ratio_5_60`, `spy_px_vs_sma50`, `spy_px_vs_sma200`, `spy_dist_252d_high` use only SPY's closes within 252 days, and `spy_rsi14` uses closes but is an exponentially weighted average built from the whole price history, so it matches a 256-day window only approximately. `spy_overnight_ret` and `spy_intraday_ret` need the opening price, which TimesFM does not receive (they are in (c)). Per-feature definitions: `results/timesfm_rootcause2_features.csv`.
+
+No feature set is distinguishable from 0.5. Reading the numbers: SPY's own closing prices do not rank the days better than chance for a trained model (0.497, 0.491). Tiny example: if you took two random days, one up and one down, and handed this model SPY's last year of closes, it picks the up day about 49 to 50 times in 100, the same as guessing.
+
+### 8.2 Where the 5-day edge of our model comes from
+
+Drop one group of features at a time from the full 23, retrain, and compare with the full model's 0.508 / 0.536 (paired, same bootstrap; positive = the group helps). This is descriptive: 12 extra comparisons, not corrected.
+
+| Group dropped (features left) | Tomorrow AUC | Full minus without (range) | 5 days AUC | Full minus without (range) |
+|---|---|---|---|---|
+| SPY short-term (19) | 0.507 | 0.000 (-0.001 to 0.002) | 0.538 | -0.002 (-0.007 to 0.002) |
+| SPY long-term / trend (18) | 0.506 | +0.001 (-0.001 to 0.004) | 0.542 | -0.007 (-0.021 to 0.007) |
+| Volatility (21) | 0.504 | +0.004 (-0.004 to 0.012) | 0.539 | -0.003 (-0.010 to 0.003) |
+| VIX (19) | 0.500 | +0.007 (0.000 to 0.017) | 0.532 | +0.003 (-0.008 to 0.019) |
+| **Other assets (17)** | 0.516 | -0.008 (-0.035 to 0.015) | **0.502** | **+0.034 (0.001 to 0.066)** |
+| Opening-price (21) | 0.503 | +0.005 (-0.005 to 0.013) | 0.534 | +0.001 (-0.002 to 0.005) |
+
+Only one removal matters: without the other-assets group the 5-day model falls to 0.502 (uncorrected p = 0.038, so weak evidence by itself). The groups are: other assets = sector breadth above its 50-day average, sector dispersion over 5 days, SPY-bond correlation over 60 days, bond (TLT) 20-day return, small-caps-minus-SPY 20-day return, consumer discretionary minus staples 20-day return. Tiny example: dropping VIX features lowers the full model's tomorrow AUC by only 0.007, e.g. 0.508 to 0.500.
+
+Standardised weights of the full model (what it leans on; features are rescaled, so sizes are comparable; all are small because C=0.003 shrinks them hard):
+
+| 5 days: feature | weight | Tomorrow: feature | weight |
+|---|---|---|---|
+| vix_minus_rv20 | +0.058 | corr_spy_tlt_60d | -0.042 |
+| spy_ret_60d | -0.051 | sector_dispersion_5d | -0.039 |
+| xly_minus_xlp_ret_20d | +0.047 | vix_z60 | -0.037 |
+| spy_vol_20d | -0.041 | spy_vol_ratio_5_60 | +0.036 |
+| spy_ret_250d | +0.033 | xly_minus_xlp_ret_20d | +0.035 |
+| tlt_ret_20d | +0.032 | vix_minus_rv20 | +0.028 |
+| spy_ret_5d | +0.02 | spy_ret_5d | +0.01 |
+
+The largest 5-day weights sit on VIX-minus-realised-volatility, SPY's 60- and 250-day returns, SPY volatility and two other-assets features; the weight on the 5-day return is only +0.02 (slightly with the trend), so the model does not bet on the 5-day reversal that TimesFM bets on (7.4). Tiny example: a day when VIX sits well above SPY's recent realised volatility (`vix_minus_rv20` high) pushes the 5-day score up.
+
+Year by year (test AUC):
+
+| Year | Tomorrow: ours | Tomorrow: TimesFM | 5 days: ours | 5 days: TimesFM |
+|---|---|---|---|---|
+| 2019 | 0.502 | 0.467 | 0.478 | 0.490 |
+| 2020 | 0.515 | 0.466 | 0.519 | 0.377 |
+| 2021 | 0.504 | 0.480 | 0.481 | 0.480 |
+| 2022 | 0.493 | 0.516 | 0.490 | 0.392 |
+| 2023 | 0.463 | 0.505 | 0.540 | 0.507 |
+| 2024 | 0.498 | 0.421 | 0.432 | 0.506 |
+| 2025 | 0.515 | 0.512 | 0.524 | 0.425 |
+| 2019-2025 pooled | 0.508 | 0.482 | 0.536 | 0.459 |
+
+The 5-day gap is concentrated in 2020, 2022 and 2025 (TimesFM 0.377, 0.392, 0.425 vs ours 0.519, 0.490, 0.524). Our model is also below 0.5 in four of the seven years at 5 days (lowest 0.432 in 2024, where TimesFM is 0.506), and the average of its seven yearly AUCs is 0.495 against the pooled 0.536. TimesFM's yearly average is 0.454 against pooled 0.459. Reading (not tested): part of our model's pooled 5-day number may come from its score level moving with the market's up-rate across years rather than from ranking days inside a year. Tiny example: 2024, ours 0.432 means that year it picked the up day in 43 of 100 up/down pairs.
+
+### 8.3 Does TimesFM add anything to the core features?
+
+Both models trained once on 2013-2018 only (the years with a TimesFM score; 1,510 rows tomorrow, 1,506 rows for 5 days), same C=0.003, tested on 2019-2025. The TimesFM features are its logit score, its median forecast return and the gap between its 90% and 10% forecasts.
+
+| Horizon | Core only | Core + TimesFM | Difference (range) | Corrected p (2 tests) | TimesFM 3 features alone | Sensitivity, C=0.03: difference (range) |
+|---|---|---|---|---|---|---|
+| Tomorrow | 0.515 | 0.518 | +0.003 (-0.002 to 0.008) | 0.23 | 0.523 | +0.007 (-0.000 to 0.015) |
+| 5 days | 0.523 | 0.514 | -0.009 (-0.016 to -0.003) | 0.008 | 0.470 | 0.000 (-0.013 to 0.014) |
+
+For tomorrow, TimesFM's outputs add 0.003, which is inside noise. For 5 days they lower the score by 0.009 at the main setting and the range excludes zero, but with a weaker penalty (C=0.03) the change is 0.000, so we read it as "no gain, possibly a small loss". Context: the core model trained on 2013-2018 only scores 0.515 / 0.523, close to the all-labels version (0.508 / 0.536); and the three TimesFM features alone score 0.523 for tomorrow (consistent with the earlier finding that its price-range width acts as a volatility signal, `TIMESFM_DRIFT.md` section 7) and 0.470 for 5 days. Tiny example: at 5 days, adding TimesFM's outputs turns 0.523 into 0.514, i.e. about one pair in 100 flips from right to wrong.
+
+### 8.4 Same bet or opposite?
+
+Rank correlation (Spearman, -1 to +1) between TimesFM's daily score and (i) our model's score, (ii) selected core features, with our model's own correlation for comparison. Test 2019-2025; the 2013-2018 value is in brackets (our model is in sample there). Full table with all 23 features: `results/timesfm_rootcause2_corr.csv`. "Opposite" means opposite signs and both at least 0.10 in size; it is flagged for tomorrow in `spy_ret_20d, spy_px_vs_sma50, spy_rsi14, vix_z60, sector_breadth_above_sma50, xly_minus_xlp_ret_20d` and for 5 days in the first five rows below plus others in the csv.
+
+| 5 days | TimesFM score vs feature | Our score vs feature |
+|---|---|---|
+| Our score | +0.11 (+0.17) | |
+| spy_ret_5d | -0.23 (-0.35) | -0.06 (-0.28) |
+| spy_ret_20d | -0.35 (-0.47) | +0.34 (+0.15) |
+| spy_px_vs_sma50 | -0.30 (-0.47) | +0.39 (+0.17) |
+| spy_rsi14 | -0.28 (-0.44) | +0.41 (+0.14) |
+| xly_minus_xlp_ret_20d | -0.23 (-0.25) | +0.54 (+0.21) |
+| sector_breadth_above_sma50 | -0.29 (-0.41) | +0.24 (+0.17) |
+| spy_vol_20d | +0.02 (+0.08) | -0.68 (-0.65) |
+| vix_z60 | +0.49 (+0.55) | -0.13 (+0.04) |
+| spy_ret_250d | +0.40 (+0.17) | +0.46 (+0.38) |
+
+For tomorrow the two scores correlate -0.02 (+0.06 in 2013-2018); the same features are flagged opposite (TimesFM vs ours: `spy_ret_20d` -0.28 vs +0.22, `spy_rsi14` -0.20 vs +0.20, `vix_z60` +0.36 vs -0.14). Our 5-day score is mainly "low realised volatility and high VIX-minus-volatility" (correlation -0.68 with 20-day volatility), which TimesFM's score ignores (+0.02). TimesFM's is mainly "SPY rose a lot over the last year but fell recently, volatility rising" (+0.40 with the 250-day return, -0.35 with the 20-day return, +0.41 with the volatility ratio). The 250-day return is the one place they agree. Tiny example: after a month in which SPY rallied 5%, TimesFM at 5 days tends to give a lower score than usual; our model tends to give a higher one. Caution: these are correlations of scores, not weights, so they show where the bets differ, not why.
+
+### 8.5 What this says about the root cause (reading, not a test)
+
+1. With the tested protocol, a trained model that sees only SPY's closing prices is at 0.49 to 0.50, so "TimesFM is poor because it misses something in SPY's own price history" is not supported.
+2. The only feature group that carries any of the simple model's 5-day edge is the one that compares SPY with other assets; that edge itself is small (full-model range 0.493 to 0.582) and one group-removal comparison (uncorrected p 0.038) supports it.
+3. TimesFM adds nothing to the core features, and its score is nearly unrelated to the simple model's. What the numbers show is a difference in bets (a small, uncertain cross-asset signal in our model; a trend/reversal-type score in TimesFM that is far below 0.5 in 2020, 2022 and 2025), not an information gap in SPY's price history. Why TimesFM's bet fails in those years is not tested here.
+4. Not shown: that TimesFM fails to use its 15 side series (they enter the model as past-only covariates, `timesfm_lib.py`), or that a different input would fix it.
+
+### 8.6 Limits and count
+
+- Exploratory, one split, one seed, labels of 5 days overlap (so the bootstrap uses blocks), and the test years were already seen.
+- Counted tests: 12 (main family, Holm), 12 (ablation, uncorrected, descriptive), 2 (section 8.3, Holm over 2) = 26. The per-year and correlation tables carry no tests.
+- Same C=0.003 for every feature set (not retuned): fewer features means relatively weaker shrinkage, so the subset scores are not a tuned ceiling.
+- The simple model and TimesFM are scored on the same test rows, but the simple model is trained on 2008-2018 and TimesFM on its pretraining data; section 8.3 is the like-for-like check on 2013-2018.
+
+### 8.7 Reproduce
+
+From `timesfm3_experiment/`: `OMP_NUM_THREADS=4 PYTHONDONTWRITEBYTECODE=1 /home/tong-nong/miniconda3/envs/timesfm/bin/python timesfm_rootcause2.py` (about 3 minutes). Outputs: `results/timesfm_rootcause2_{repro,features,subsets,ablation,coefs,by_year,add_timesfm,add_timesfm_coefs,corr}.csv`.

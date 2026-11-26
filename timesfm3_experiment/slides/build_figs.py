@@ -50,18 +50,18 @@ assert abs(lr1 - level(1, "fixed_lr")) < 1e-5 and abs(lr5 - level(5, "fixed_lr")
 
 fig, ax = plt.subplots(figsize=(6.0, 4.2)); clean(ax)
 x = np.arange(2); w = 0.34
-vals = {"TimesFM-3 + drift layer": [auc1, auc5], "Logistic regression": [lr1, lr5]}
+vals = {"TimesFM-3 + drift layer": [auc1, auc5], "Our simple model": [lr1, lr5]}
 for i, (name, v) in enumerate(vals.items()):
     xs = x + (i - 0.5) * (w + 0.04)
     col = BLUE if i == 0 else SLATE
     ax.bar(xs, [vv - 0.5 for vv in v], w, bottom=0.5, color=col, label=name, zorder=3)
     for xx, vv in zip(xs, v):
-        ax.text(xx, vv + (0.004 if vv >= 0.5 else -0.004), f"{vv:.3f}", ha="center", va="bottom" if vv >= 0.5 else "top",
+        ax.text(xx, vv + (0.004 if vv >= 0.5 else -0.004), f"{vv:.2f}", ha="center", va="bottom" if vv >= 0.5 else "top",
                 fontsize=15, color=INK, fontweight="bold")
 ax.axhline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
 ax.text(-0.93, 0.5, "coin flip", ha="left", va="bottom", fontsize=14, color=INK)
 ax.set_ylim(0.43, 0.58); ax.set_xlim(-0.95, 1.62)
-ax.set_xticks(x); ax.set_xticklabels(["h=1\ntomorrow", "h=5\nnext 5 days"], fontsize=15, color=INK)
+ax.set_xticks(x); ax.set_xticklabels(["Tomorrow", "Next 5 days"], fontsize=15, color=INK)
 ax.set_yticks([0.45, 0.5, 0.55]); ax.set_ylabel("AUC", color=MUTE)
 ax.legend(loc="upper left", frameon=False, fontsize=14, labelcolor=INK, borderaxespad=0)
 fig.tight_layout(); fig.savefig(FIG / "auc_horizon.png", dpi=DPI); plt.close(fig)
@@ -72,12 +72,12 @@ a5 = [det[(det.year == y) & (det.horizon == 5)].auc.iloc[0] for y in yrs]
 fall = {2020, 2022, 2025}
 ax.bar(range(7), [a - 0.5 for a in a5], 0.66, bottom=0.5, color=[VIOLET if y in fall else SLATE for y in yrs], zorder=3)
 for i, a in enumerate(a5):
-    ax.text(i, a + (0.006 if a >= 0.5 else -0.006), f"{a:.3f}", ha="center", va="bottom" if a >= 0.5 else "top", fontsize=14, color=INK, fontweight="bold")
+    ax.text(i, a + (0.006 if a >= 0.5 else -0.006), f"{a:.2f}", ha="center", va="bottom" if a >= 0.5 else "top", fontsize=14, color=INK, fontweight="bold")
 ax.axhline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
 ax.text(-0.55, 0.5, "coin flip", ha="left", va="bottom", fontsize=14, color=INK)
 ax.set_ylim(0.34, 0.54); ax.set_xlim(-0.6, 6.6)
 ax.set_xticks(range(7)); ax.set_xticklabels([str(y) for y in yrs], fontsize=13, color=INK)
-ax.set_yticks([0.4, 0.5]); ax.set_ylabel("AUC, h=5", color=MUTE)
+ax.set_yticks([0.4, 0.5]); ax.set_ylabel("AUC, next 5 days", color=MUTE)
 ax.legend([Patch(color=VIOLET), Patch(color=SLATE)], ["big-fall years", "other years"], loc="lower right", frameon=False, fontsize=14,
           labelcolor=INK, borderaxespad=0.2, bbox_to_anchor=(1.0, 0.0), ncol=1)
 fig.tight_layout(); fig.savefig(FIG / "auc_by_year.png", dpi=DPI); plt.close(fig)
@@ -152,7 +152,7 @@ for yr in range(2019, 2026):
         a0.axvspan(a, e + pd.Timedelta(hours=23), color=col, alpha=al, lw=0, zorder=1)
         a3.axvspan(a, e + pd.Timedelta(hours=23), color=col, alpha=min(1, al * 2.2), lw=0)
         a0.text(a + (e - a) / 2, 0.985, lab, transform=a0.get_xaxis_transform(), ha="center", va="top", fontsize=14, color=INK, fontweight="bold", zorder=5)
-    for ax, ser, name in ((a1, g.pred, "TimesFM + drift said “up” (h=5)"), (a2, g.y, "Market went up (next 5 days)")):
+    for ax, ser, name in ((a1, g.pred, "TimesFM + drift layer said “up”"), (a2, g.y, "Market went up over the next 5 days")):
         ax.bar(g.index, np.ones(len(g)), width=1.25, color=[BLUE if v else GREY for v in ser], zorder=2)
         ax.set_ylim(0, 1); ax.set_yticks([])
         ax.text(0.0, 1.12, name, transform=ax.transAxes, fontsize=14, color=INK, va="bottom")
@@ -173,7 +173,7 @@ df_ = pd.read_csv(RES / "timesfm_vs_chronos_drift_features.csv"); df_ = df_[df_.
 def sp(h, model, vs):
     if vs == "spread": return df_[(df_.h == h) & (df_.model == model)].spearman_with_z.iloc[0]
     return tc[(tc.h == h) & (tc.model == model) & (tc.vs == vs)].spearman.iloc[0]
-rows = [("trailing 1-day return", "ret1"), ("trailing 5-day return", "ret5"), ("20-day realized vol", "vol20"), ("its own forecast band", "spread")]
+rows = [("Yesterday's\nmove", "ret1"), ("Last 5 days'\nmove", "ret5"), ("Recent swings\n(20 days)", "vol20"), ("Width of its\nown price range", "spread")]
 fig, axs = plt.subplots(1, 2, figsize=(7.45, 4.4), sharey=True)
 for ax, h in zip(axs, (1, 5)):
     clean(ax, grid_y=False); ax.grid(axis="x", color=GRID, lw=0.8)
@@ -183,15 +183,16 @@ for ax, h in zip(axs, (1, 5)):
         ys = yy + (0.5 - k) * (bh + 0.03)
         ax.barh(ys, v, bh, color=col, zorder=3, label="TimesFM-3" if model == "timesfm" else "Chronos-2")
         for yv, vv in zip(ys, v):
-            ax.text(vv + (0.03 if vv >= 0 else -0.03), yv, f"{vv:+.2f}".replace("-", "\u2212"), ha="left" if vv >= 0 else "right", va="center", fontsize=12, color=INK, fontweight="bold")
+            if abs(vv) >= 0.2:   # label only the clear leans; near-zero bars are visibly ~0
+                ax.text(vv + (0.03 if vv >= 0 else -0.03), yv, f"{vv:+.2f}".replace("-", "\u2212"), ha="left" if vv >= 0 else "right", va="center", fontsize=12, color=INK, fontweight="bold")
     ax.axvline(0, color=INK, lw=1.2, zorder=4)
     ax.set_xlim(-1.12, 0.95); ax.set_xticks([-0.5, 0, 0.5])
     ax.set_xticklabels(["\u22120.5", "0", "+0.5"], fontsize=12)
-    ax.set_title("h=1, tomorrow" if h == 1 else "h=5, next 5 days", fontsize=14, color=INK, fontweight="bold", loc="left")
-axs[0].set_yticks(np.arange(len(rows))[::-1]); axs[0].set_yticklabels([r[0].replace(" ", "\n", 1) if i < 3 else "its own\nforecast band" for i, r in enumerate(rows)], fontsize=12, color=INK)
+    ax.set_title("Tomorrow" if h == 1 else "Next 5 days", fontsize=14, color=INK, fontweight="bold", loc="left")
+axs[0].set_yticks(np.arange(len(rows))[::-1]); axs[0].set_yticklabels([r[0] for r in rows], fontsize=12, color=INK)
 hd, lb = axs[0].get_legend_handles_labels()
 fig.legend(hd, lb, loc="upper right", ncol=2, frameon=False, fontsize=13, labelcolor=INK, bbox_to_anchor=(1.0, 1.0), columnspacing=1.4, handlelength=1.2)
-fig.supxlabel("Spearman correlation of the daily score with ...", fontsize=12, color=MUTE, y=0.0)
+fig.supxlabel("Does the model's chance of up move with ...?   + together, \u2212 opposite", fontsize=12, color=MUTE, y=0.0)
 fig.tight_layout(rect=(0, 0, 1, 0.92)); fig.savefig(FIG / "timesfm_vs_chronos.png", dpi=DPI); plt.close(fig)
 
 # ---------------- slide 15: why the drift layer helped (TIMESFM_DRIFT.md section 7)
@@ -199,8 +200,8 @@ sa = pd.read_csv(RES / "timesfm_drift_why_h1_single_auc.csv").set_index("feature
 rb = pd.read_csv(RES / "timesfm_drift_why_h5_robust_years.csv").set_index("sample")
 fig, (a1_, a2_) = plt.subplots(1, 2, figsize=(6.9, 4.2), gridspec_kw={"width_ratios": [3.1, 1.5]})
 clean(a1_, grid_y=False); a1_.grid(axis="x", color=GRID, lw=0.8)
-feats = [("TimesFM score", "score_logit", BLUE), ("forecast median", "median_return", BLUE), ("forecast band width", "spread_q90q10", BLUE),
-         ("VIX", "VIX", SLATE), ("20-day realized vol", "rv20", SLATE), ("stack-4 (the layer)", "stack-4 (fixed layer)", VIOLET)]
+feats = [("TimesFM up/down call", "score_logit", BLUE), ("TimesFM middle price", "median_return", BLUE), ("Width of TimesFM's\nprice range", "spread_q90q10", BLUE),
+         ("VIX (fear index)", "VIX", SLATE), ("Recent swings\n(20 days)", "rv20", SLATE), ("Drift layer", "stack-4 (fixed layer)", VIOLET)]
 for i, (lab, key, col) in enumerate(feats):
     v = sa[key]; yv = len(feats) - 1 - i
     a1_.barh(yv, v - 0.5, 0.62, left=0.5, color=col, zorder=3)
@@ -208,7 +209,7 @@ for i, (lab, key, col) in enumerate(feats):
 a1_.axvline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
 a1_.set_yticks(range(len(feats))); a1_.set_yticklabels([f[0] for f in feats][::-1], fontsize=13, color=INK)
 a1_.set_xlim(0.465, 0.545); a1_.set_xticks([0.48, 0.50, 0.52]); a1_.tick_params(axis="x", labelsize=12)
-a1_.set_title("h=1: test AUC, one input at a time", fontsize=13, color=INK, fontweight="bold", loc="left")
+a1_.set_title("Tomorrow: AUC of\neach input alone", fontsize=13, color=INK, fontweight="bold", loc="left")
 clean(a2_); 
 g = [("all\n7 years", rb.loc["all years", "d_auc"], BLUE), ("without\n2022", rb.loc["excl 2022", "d_auc"], VIOLET)]
 for i, (lab, v, col) in enumerate(g):
@@ -217,6 +218,62 @@ for i, (lab, v, col) in enumerate(g):
 a2_.axhline(0, color=INK, lw=1.2, zorder=4)
 a2_.set_xticks([0, 1]); a2_.set_xticklabels([x[0] for x in g], fontsize=12, color=INK)
 a2_.set_ylim(-0.014, 0.03); a2_.set_yticks([0]); a2_.set_yticklabels(["0"], fontsize=12); a2_.set_xlim(-0.6, 1.6)
-a2_.set_title("h=5: AUC gain", fontsize=13, color=INK, fontweight="bold", loc="left")
+a2_.set_title("Next 5 days:\nAUC gain", fontsize=13, color=INK, fontweight="bold", loc="left")
 fig.tight_layout(); fig.savefig(FIG / "drift_why.png", dpi=DPI); plt.close(fig)
+
+# ---------------- slide 12: is the neural network the problem? (was timesfm_rootcause_figure.py; same data, plain labels)
+comp = pd.read_csv(RES / "timesfm_rootcause_components.csv").set_index(["model", "h"])
+base = pd.read_csv(RES / "timesfm_rootcause_baselines.csv").set_index(["model", "h"])
+NAMES = [("TimesFM as released", comp, "official"), ("Its neural network only", comp, "network_only"), ("Its built-in trend line only", comp, "line_slope"),
+         ("Today + average\ndaily gain", base, "random_walk_drift"), ("Next move from the\nlast 5 moves", base, "AR5_returns"), ("Fading trend", base, "ETS_damped_trend")]
+rcs = []
+for lab, t, k in NAMES:
+    r_ = t.loc[(k, 5)]
+    rcs.append(dict(model=lab, auc=r_.auc_pooled, lo=r_.ci_lo, hi=r_.ci_hi, **{f"auc_{y}": r_[f"auc_{y}"] for y in range(2019, 2026)}))
+d_ = pd.DataFrame(rcs)
+fig, ax = plt.subplots(figsize=(7.5, 4.4))
+yv = np.arange(len(d_))[::-1]
+ax.axvline(0.5, ls="--", c=INK, lw=1.3, zorder=1)
+for i, r_ in d_.iterrows():
+    cc = "#c0392b" if i < 3 else BLUE
+    ax.hlines(yv[i], r_.lo, r_.hi, color=cc, lw=2.4, alpha=.5, zorder=2)
+    ax.plot(r_.auc, yv[i], "o", ms=11, color=cc, zorder=4)
+    ax.text(0.595, yv[i], f"{r_.auc:.2f}", va="center", ha="left", fontsize=13, color=INK, fontweight="bold")
+    for yr, mk in ((2020, "s"), (2022, "^"), (2025, "D")):
+        ax.plot(r_[f"auc_{yr}"], yv[i], mk, ms=6, mfc="white", mec="#444", mew=1.2, zorder=3)
+ax.set_yticks(yv); ax.set_yticklabels(d_.model, fontsize=12, color=INK)
+ax.set_xlim(0.28, 0.66); ax.set_ylim(-0.6, len(d_) - 0.4)
+ax.set_xlabel("AUC for the next 5 days (dot = all test years; bar = range luck alone could give)", fontsize=11, color=MUTE)
+ax.tick_params(axis="x", labelsize=12, colors=MUTE)
+for sp_ in ("top", "right"): ax.spines[sp_].set_visible(False)
+ax.text(0.5, len(d_) - 0.35, "coin flip", ha="center", va="bottom", fontsize=12, color=INK)
+ax.plot([], [], " ", label="single years:"); ax.plot([], [], "s", ms=6, mfc="white", mec="#444", label="2020"); ax.plot([], [], "^", ms=6, mfc="white", mec="#444", label="2022")
+ax.plot([], [], "D", ms=6, mfc="white", mec="#444", label="2025")
+ax.legend(loc="lower left", fontsize=12, frameon=False, ncol=4, handletextpad=.2, columnspacing=.8, bbox_to_anchor=(0.0, 1.06), title=None, title_fontsize=12, alignment="left")
+fig.tight_layout(); fig.savefig(FIG / "root_cause.png", dpi=DPI, facecolor="white"); plt.close(fig)
+
+# ---------------- slides 14 and 16: bar charts of test AUC by method (were drawn by the study scripts' report(); same data, plain labels)
+def method_chart(L, names, fname, tick_size):
+    fig, ax = plt.subplots(figsize=(7.5, 4.2)); clean(ax)
+    w = 0.36
+    for j, (h, col, lab) in enumerate([(1, BLUE, "Tomorrow"), (5, VIOLET, "Next 5 days")]):
+        v = [float(L[(L.horizon == h) & (L.role == r)].roc_auc.iloc[0]) for r, _ in names]
+        xs = np.arange(len(names)) + (j - 0.5) * w
+        ax.bar(xs, [a - 0.5 for a in v], w * 0.94, bottom=0.5, color=col, label=lab, zorder=3)
+        for x_, a in zip(xs, v):
+            ax.text(x_, a + (0.004 if a >= 0.5 else -0.004), f"{a:.2f}", ha="center", va="bottom" if a >= 0.5 else "top", fontsize=12, color=INK, fontweight="bold")
+    ax.axhline(0.5, color=INK, lw=1.4, ls=(0, (5, 3)), zorder=4)
+    ax.set_xticks(range(len(names))); ax.set_xticklabels([n for _, n in names], fontsize=tick_size, color=INK)
+    allv = L[L.role.isin([r for r, _ in names])].roc_auc
+    lo, hi = min(0.44, allv.min() - 0.012), max(0.56, allv.max() + 0.015)
+    ax.set_ylim(lo, hi); ax.set_yticks([t for t in (0.44, 0.46, 0.48, 0.50, 0.52, 0.54, 0.56) if lo <= t <= hi])
+    ax.set_ylabel("Test AUC 2019\u20132025", color=MUTE)
+    hd_, lb_ = ax.get_legend_handles_labels()
+    ax.legend(hd_ + [plt.Line2D([], [], color=INK, lw=1.4, ls=(0, (5, 3)))], lb_ + ["coin flip (0.5)"], loc="upper left", frameon=False, fontsize=12, labelcolor=INK, borderaxespad=0, ncol=3, columnspacing=1.2)
+    fig.tight_layout(); fig.savefig(FIG / fname, dpi=DPI, facecolor="white"); plt.close(fig)
+method_chart(lev, [("static", "TimesFM\nalone"), ("platt", "Monthly\nshift"), ("stack", "Small model\non top"), ("hedge", "Vote"), ("detect", "Alarm"), ("fixed_lr", "Our simple\nmodel")],
+             "drift_methods.png", 12)
+vlev = pd.read_csv(RES / "timesfm_vixdrift_test_levels.csv")
+method_chart(vlev, [("d0", "TimesFM +\ndrift layer"), ("d1", "Refit when\nVIX flips"), ("d2", "Pick model\nby VIX"), ("d3", "Add VIX\nterms"), ("d4", "VIX taken\nout of input"), ("fixed_lr", "Our simple\nmodel")],
+             "vix_drift_methods.png", 11.5)
 print("done")

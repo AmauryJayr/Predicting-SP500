@@ -1,0 +1,13 @@
+h,subset,n_features,test,auc,lo,hi,p_two_sided,d_auc,p_holm_12
+1,(a) all 23 core,23,AUC vs chance 0.5,0.50759,0.48054,0.53187,0.62900,,1.00000
+1,(b) SPY Close-only (11),11,AUC vs chance 0.5,0.49657,0.47176,0.52259,0.77400,,1.00000
+1,(c) all SPY incl. Open (13),13,AUC vs chance 0.5,0.50430,0.47768,0.53148,0.72900,,1.00000
+1,(d) VIX group (4),4,AUC vs chance 0.5,0.50887,0.48334,0.53732,0.40000,,1.00000
+1,(e) cross-asset group (6),6,AUC vs chance 0.5,0.49128,0.46240,0.51360,0.38600,,1.00000
+1,(a) all 23 core vs TimesFM static,23,paired diff (LR - TimesFM),0.50759,-0.01079,0.06244,0.18600,0.02573,1.00000
+5,(a) all 23 core,23,AUC vs chance 0.5,0.53555,0.49287,0.58236,0.09700,,1.00000
+5,(b) SPY Close-only (11),11,AUC vs chance 0.5,0.49144,0.45137,0.53850,0.80500,,1.00000
+5,(c) all SPY incl. Open (13),13,AUC vs chance 0.5,0.49463,0.45634,0.53880,0.90000,,1.00000
+5,(d) VIX group (4),4,AUC vs chance 0.5,0.51055,0.47365,0.55527,0.51200,,1.00000
+5,(e) cross-asset group (6),6,AUC vs chance 0.5,0.53932,0.49249,0.58092,0.10900,,1.00000
+5,(a) all 23 core vs TimesFM static,23,paired diff (LR - TimesFM),0.53555,0.02006,0.13706,0.01000,0.07639,0.12000

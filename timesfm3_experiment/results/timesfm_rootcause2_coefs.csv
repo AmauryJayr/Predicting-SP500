@@ -1,0 +1,47 @@
+h,feature,group,coef_standardised
+1,spy_ret_1d,SPY short-term,-0.00362
+1,spy_ret_5d,SPY short-term,0.01107
+1,spy_ret_20d,SPY short-term,-0.00846
+1,spy_ret_60d,SPY long-term/trend,-0.01424
+1,spy_ret_250d,SPY long-term/trend,0.00690
+1,spy_overnight_ret,Open-based,0.02422
+1,spy_intraday_ret,Open-based,-0.02218
+1,spy_vol_20d,volatility,-0.00229
+1,spy_vol_ratio_5_60,volatility,0.03603
+1,spy_px_vs_sma50,SPY long-term/trend,-0.00963
+1,spy_px_vs_sma200,SPY long-term/trend,0.01325
+1,spy_rsi14,SPY short-term,-0.00569
+1,spy_dist_252d_high,SPY long-term/trend,-0.01035
+1,vix_level,VIX,0.01226
+1,vix_z60,VIX,-0.03691
+1,vix_minus_rv20,VIX,0.02828
+1,vix_log_chg_5d,VIX,0.01524
+1,sector_breadth_above_sma50,cross-asset,0.01667
+1,sector_dispersion_5d,cross-asset,-0.03939
+1,corr_spy_tlt_60d,cross-asset,-0.04231
+1,tlt_ret_20d,cross-asset,-0.01954
+1,iwm_minus_spy_ret_20d,cross-asset,-0.02004
+1,xly_minus_xlp_ret_20d,cross-asset,0.03511
+5,spy_ret_1d,SPY short-term,-0.02490
+5,spy_ret_5d,SPY short-term,0.01691
+5,spy_ret_20d,SPY short-term,-0.00214
+5,spy_ret_60d,SPY long-term/trend,-0.05052
+5,spy_ret_250d,SPY long-term/trend,0.03267
+5,spy_overnight_ret,Open-based,-0.00366
+5,spy_intraday_ret,Open-based,-0.02883
+5,spy_vol_20d,volatility,-0.04134
+5,spy_vol_ratio_5_60,volatility,0.01983
+5,spy_px_vs_sma50,SPY long-term/trend,-0.00225
+5,spy_px_vs_sma200,SPY long-term/trend,0.01546
+5,spy_rsi14,SPY short-term,0.01627
+5,spy_dist_252d_high,SPY long-term/trend,0.00899
+5,vix_level,VIX,-0.02023
+5,vix_z60,VIX,-0.01645
+5,vix_minus_rv20,VIX,0.05790
+5,vix_log_chg_5d,VIX,0.02373
+5,sector_breadth_above_sma50,cross-asset,-0.01123
+5,sector_dispersion_5d,cross-asset,-0.02562
+5,corr_spy_tlt_60d,cross-asset,-0.01647
+5,tlt_ret_20d,cross-asset,0.03236
+5,iwm_minus_spy_ret_20d,cross-asset,-0.01373
+5,xly_minus_xlp_ret_20d,cross-asset,0.04694
